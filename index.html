@@ -717,6 +717,18 @@
             const cust = window.customers.find(c => c.id === custID);
             if (!cust) return;
 
+            // طلب كلمة المرور قبل الحذف
+            const password = prompt("هذا الإجراء يتطلب صلاحية المدير. يرجى إدخال كلمة المرور للحذف:");
+            
+            if (password === null) {
+                return; // تم إلغاء العملية
+            }
+            
+            if (password !== "1965") {
+                alert("كلمة المرور غير صحيحة! تم إلغاء عملية الحذف.");
+                return;
+            }
+
             if (confirm(`هل أنت متأكد من حذف الزبون (${cust.name}) وكافة ديونه وسجلاته نهائياً من قاعدة البيانات؟`)) {
                 remove(ref(db, 'qaleb_debts/customers/' + custID));
                 window.transactions.forEach(t => {
@@ -725,6 +737,7 @@
                 window.calls.forEach(c => {
                     if (c.customerId === custID) remove(ref(db, 'qaleb_debts/calls/' + c.id));
                 });
+                alert("تم الحذف بنجاح.");
             }
         };
 

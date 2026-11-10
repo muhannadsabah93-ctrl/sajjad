@@ -38,9 +38,13 @@
                 left: 0; 
                 top: 0; 
                 width: 100%; 
+                min-height: 100vh;
                 background: white !important; 
                 color: black !important; 
                 font-size: 15px !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: space-between !important;
             }
             .no-print { display: none !important; }
             table { border-collapse: collapse; }
@@ -59,13 +63,10 @@
                 </div>
                 <div>
                     <h1 class="text-2xl font-black text-white tracking-wide">معامل القالب للكونكريت</h1>
-                    <p class="text-sm text-amber-400 font-bold">قسم الحسابات - نظام متابعة وتحصيل الديون (متصل بـ Firebase)</p>
+                    <p class="text-sm text-amber-400 font-bold">قسم الحسابات - نظام متابعة وتحصيل الديون</p>
                 </div>
             </div>
             <div class="flex items-center gap-4">
-                <span id="firebaseStatus" class="text-xs bg-amber-500/20 text-amber-300 border border-amber-500/40 px-3 py-1.5 rounded-lg font-bold flex items-center gap-2">
-                    <i class="fa-solid fa-circle-notch fa-spin"></i> جاري الاتصال بقاعدة البيانات...
-                </span>
                 <div class="text-base text-slate-200 font-bold hidden sm:block bg-slate-900/80 px-4 py-2 rounded-lg border border-slate-700" id="currentDateDisplay"></div>
             </div>
         </div>
@@ -471,10 +472,14 @@
     </div>
 
     <!-- Printable A4 Container (High Contrast Print View) -->
-    <div id="printableArea" class="p-8 hidden">
-        <div id="printBody"></div>
-        <div class="mt-20 border-t-2 border-black pt-4 flex justify-end text-sm text-black font-black">
-            <p>مسؤول الحسابات / أمين الصندوق: ....................................</p>
+    <div id="printableArea" class="p-8 hidden flex flex-col justify-between min-h-screen">
+        <div id="printBody" class="flex-1"></div>
+        <div class="mt-4 border-t-2 border-black pt-3 flex justify-between items-center text-sm text-black font-black">
+            <p id="printSignCustomer">توقيع الزبون: ....................................</p>
+            <div class="text-center">
+                <p>أمين الصندوق</p>
+                <p class="mt-1 font-bold">سجاد محي محسن</p>
+            </div>
         </div>
     </div>
 
@@ -499,7 +504,6 @@
         const analytics = getAnalytics(app);
         const db = getDatabase(app);
 
-        // Make variables global so standard onclick handlers work seamlessly
         window.customers = [];
         window.transactions = [];
         window.calls = [];
@@ -516,34 +520,18 @@
         });
 
         function initFirebaseListeners() {
-            const statusBadge = document.getElementById('firebaseStatus');
-            
-            // Listen to connection state
-            onValue(ref(db, '.info/connected'), (snapshot) => {
-                if (snapshot.val() === true) {
-                    statusBadge.className = "text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-3 py-1.5 rounded-lg font-bold flex items-center gap-2";
-                    statusBadge.innerHTML = `<i class="fa-solid fa-circle text-emerald-400"></i> متصل بـ Firebase`;
-                } else {
-                    statusBadge.className = "text-xs bg-rose-500/20 text-rose-300 border border-rose-500/40 px-3 py-1.5 rounded-lg font-bold flex items-center gap-2";
-                    statusBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-400"></i> جاري الاتصال...`;
-                }
-            });
-
-            // Customers Listener
             onValue(ref(db, 'qaleb_debts/customers'), (snapshot) => {
                 const data = snapshot.val();
                 window.customers = data ? Object.values(data) : [];
                 refreshUI();
             });
 
-            // Transactions Listener
             onValue(ref(db, 'qaleb_debts/transactions'), (snapshot) => {
                 const data = snapshot.val();
                 window.transactions = data ? Object.values(data) : [];
                 refreshUI();
             });
 
-            // Calls Listener
             onValue(ref(db, 'qaleb_debts/calls'), (snapshot) => {
                 const data = snapshot.val();
                 window.calls = data ? Object.values(data) : [];
@@ -717,12 +705,8 @@
             const cust = window.customers.find(c => c.id === custID);
             if (!cust) return;
 
-            // طلب كلمة المرور قبل الحذف
             const password = prompt("هذا الإجراء يتطلب صلاحية المدير. يرجى إدخال كلمة المرور للحذف:");
-            
-            if (password === null) {
-                return; // تم إلغاء العملية
-            }
+            if (password === null) return;
             
             if (password !== "1965") {
                 alert("كلمة المرور غير صحيحة! تم إلغاء عملية الحذف.");
@@ -1196,6 +1180,8 @@
                 if (t.id === trx.id) currentBalAtTrx = runningBal;
             });
 
+            document.getElementById('printSignCustomer').innerText = `توقيع الزبون (${cust.name}): ....................................`;
+
             const docType = trx.type === 'pay' ? 'وصل تسديد ومقبوضات' : 'وصل إضافة دين جديد';
             const printBody = document.getElementById('printBody');
 
@@ -1237,6 +1223,8 @@
             if (!window.activeDetailCustId) return;
             const cust = window.customers.find(c => c.id === window.activeDetailCustId);
             if (!cust) return;
+
+            document.getElementById('printSignCustomer').innerText = `توقيع الزبون (${cust.name}): ....................................`;
 
             const typeFilter = document.getElementById('detailTypeFilter').value;
             const timeFilter = document.getElementById('detailTimeFilter').value;
@@ -1329,6 +1317,7 @@
 
         window.printGlobalReport = function() {
             const todayStr = new Date().toISOString().split('T')[0];
+            document.getElementById('printSignCustomer').innerText = `توقيع المدير / المسؤول: ....................................`;
             const printBody = document.getElementById('printBody');
             let rows = '';
 

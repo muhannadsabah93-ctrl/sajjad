@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة وتحصيلات الديون - معامل القالب للكونكريت</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Cairo -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { cairo: ['Cairo', 'sans-serif'] },
+                    colors: {
+                        darkbg: '#0f172a',
+                        cardbg: '#1e293b',
+                        accent: '#f59e0b',
+                        accentHover: '#d97706'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Cairo', sans-serif; background-color: #0f172a; color: #f8fafc; font-size: 16px; }
+        
+        /* High Contrast & Font Customization for Print */
+        @media print {
+            body * { visibility: hidden; }
+            #printableArea, #printableArea * { visibility: visible; }
+            #printableArea { 
+                position: absolute; 
+                left: 0; 
+                top: 0; 
+                width: 100%; 
+                background: white !important; 
+                color: black !important; 
+                font-size: 15px !important;
+            }
+            .no-print { display: none !important; }
+            table { border-collapse: collapse; }
+            th, td { border: 2px solid #000 !important; color: #000 !important; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header / Navbar -->
+    <header class="bg-slate-800 border-b-2 border-amber-500/50 p-4 sticky top-0 z-30 no-print shadow-xl">
+        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <div class="w-12 h-12 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-black text-2xl shadow-lg">
+                    <i class="fa-solid fa-building-columns"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-black text-white tracking-wide">معامل القالب للكونكريت</h1>
+                    <p class="text-sm text-amber-400 font-bold">قسم الحسابات - نظام متابعة وتحصيل الديون (متصل بـ Firebase)</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <span id="firebaseStatus" class="text-xs bg-amber-500/20 text-amber-300 border border-amber-500/40 px-3 py-1.5 rounded-lg font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i> جاري الاتصال بقاعدة البيانات...
+                </span>
+                <div class="text-base text-slate-200 font-bold hidden sm:block bg-slate-900/80 px-4 py-2 rounded-lg border border-slate-700" id="currentDateDisplay"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Navigation Tabs -->
+    <nav class="bg-slate-900 border-b border-slate-700 no-print">
+        <div class="max-w-7xl mx-auto flex overflow-x-auto text-base font-extrabold">
+            <button onclick="switchTab('overview')" id="tab-overview" class="tab-btn active border-b-4 border-amber-500 text-amber-400 py-4 px-7 flex items-center gap-2 hover:bg-slate-800 transition">
+                <i class="fa-solid fa-chart-pie text-lg"></i> 1. نظرة عامة
+            </button>
+            <button onclick="switchTab('customers')" id="tab-customers" class="tab-btn text-slate-300 py-4 px-7 flex items-center gap-2 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-users text-lg"></i> 2. إدارة الزبائن
+            </button>
+            <button onclick="switchTab('actions')" id="tab-actions" class="tab-btn text-slate-300 py-4 px-7 flex items-center gap-2 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-phone-volume text-lg"></i> 3. الاتصال والمواعيد
+            </button>
+            <button onclick="switchTab('logs')" id="tab-logs" class="tab-btn text-slate-300 py-4 px-7 flex items-center gap-2 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-box-archive text-lg"></i> 4. السجلات والتقارير
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 no-print space-y-6">
+
+        <!-- Tab 1: Overview -->
+        <section id="sec-overview" class="tab-content space-y-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-slate-800 border-2 border-slate-700 p-6 rounded-2xl shadow-xl flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-slate-300 font-extrabold mb-1">مجموع مبالغ الديون المتبقية</p>
+                        <h3 class="text-3xl font-black text-amber-400" id="statTotalRemaining">0 د.ع</h3>
+                        <p class="text-xs text-slate-400 mt-2 font-bold" id="statTotalOriginal">إجمالي الديون الأصلية: 0 د.ع</p>
+                    </div>
+                    <div class="w-14 h-14 bg-amber-500/20 text-amber-400 rounded-2xl flex items-center justify-center text-2xl border border-amber-500/40">
+                        <i class="fa-solid fa-coins"></i>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800 border-2 border-slate-700 p-6 rounded-2xl shadow-xl flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-slate-300 font-extrabold mb-1">مستحصلات هذا الشهر</p>
+                        <h3 class="text-3xl font-black text-emerald-400" id="statMonthCollected">0 د.ع</h3>
+                        <p class="text-xs text-slate-400 mt-2 font-bold">المقبوضات المسجلة خلال الشهر الحالي</p>
+                    </div>
+                    <div class="w-14 h-14 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center text-2xl border border-emerald-500/40">
+                        <i class="fa-solid fa-sack-dollar"></i>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800 border-2 border-slate-700 p-6 rounded-2xl shadow-xl flex items-center justify-between sm:col-span-2 lg:col-span-1">
+                    <div>
+                        <p class="text-sm text-slate-300 font-extrabold mb-1">مستحقات اليوم المتأخرة/الحالية</p>
+                        <h3 class="text-3xl font-black text-rose-400" id="statDueToday">0 د.ع</h3>
+                        <p class="text-xs text-slate-400 mt-2 font-bold" id="statDueCount">عدد الزبائن المستحقين: 0</p>
+                    </div>
+                    <div class="w-14 h-14 bg-rose-500/20 text-rose-400 rounded-2xl flex items-center justify-center text-2xl border border-rose-500/40">
+                        <i class="fa-solid fa-bell font-bold"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alerts List -->
+            <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl p-6 shadow-xl space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-700 pb-4">
+                    <h2 class="text-xl font-black text-white flex items-center gap-2">
+                        <i class="fa-solid fa-triangle-exclamation text-rose-500 text-2xl"></i> تنبيهات الاستحقاق والتأخير
+                    </h2>
+                    <span class="text-sm bg-rose-500/20 text-rose-300 border border-rose-500/40 px-4 py-1.5 rounded-full font-extrabold" id="alertsBadge">0 تنبيهات</span>
+                </div>
+                <div id="alertsList" class="space-y-3 max-h-96 overflow-y-auto pr-1"></div>
+            </div>
+        </section>
+
+        <!-- Tab 2: Customer Management -->
+        <section id="sec-customers" class="tab-content hidden space-y-6">
+            <!-- Table Box -->
+            <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl p-6 shadow-xl space-y-5">
+                <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-700 pb-4">
+                    <div>
+                        <h2 class="text-xl font-black text-white">إدارة وحسابات الزبائن</h2>
+                        <p class="text-sm text-slate-300 font-semibold">إضافة زبون جديد ومتابعة الحساب المالي الإجمالي والديون المتبقية</p>
+                    </div>
+                    <button onclick="openAddCustomerModal()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-base px-5 py-3 rounded-xl flex items-center gap-2 shadow-lg transition">
+                        <i class="fa-solid fa-user-plus text-lg"></i> إضافة زبون جديد
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right text-base text-slate-100">
+                        <thead class="bg-slate-900 text-slate-300 uppercase text-xs font-black">
+                            <tr>
+                                <th class="p-3.5">اسم الزبون</th>
+                                <th class="p-3.5">تاريخ الإنشاء</th>
+                                <th class="p-3.5">رقم الهاتف</th>
+                                <th class="p-3.5">العنوان</th>
+                                <th class="p-3.5">المبلغ الإجمالي</th>
+                                <th class="p-3.5">المتبقي (الديون)</th>
+                                <th class="p-3.5">ملاحظات</th>
+                                <th class="p-3.5 text-center">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customersTableBody" class="divide-y divide-slate-700"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Excel Import/Export Section Box -->
+            <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl p-6 shadow-xl space-y-5">
+                <div class="border-b border-slate-700 pb-4 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-black text-white flex items-center gap-2">
+                            <i class="fa-solid fa-file-excel text-emerald-400 text-2xl"></i> استيراد وتصدير بيانات الزبائن والديون (Excel / CSV)
+                        </h3>
+                        <p class="text-sm text-slate-300 font-semibold mt-1">تصدير قائمة الزبائن والديون الحالية إلى ملف إكسل أو استيراد بيانات سابقة من ملف إكسل مباشرة</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Export Options -->
+                    <div class="bg-slate-900 border border-slate-700 p-5 rounded-xl space-y-4">
+                        <h4 class="text-base font-black text-amber-400 flex items-center gap-2">
+                            <i class="fa-solid fa-file-export"></i> تصدير البيانات إلى Excel
+                        </h4>
+                        <p class="text-xs text-slate-300 font-bold leading-relaxed">
+                            قم بتصدير البيانات كاملة إلى ملف CSV مع التوافق التام مع برنامج Microsoft Excel ودعم اللغة العربية (UTF-8 BOM).
+                        </p>
+                        <div class="flex flex-wrap gap-3 pt-2">
+                            <button onclick="exportCustomersToCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm px-4 py-2.5 rounded-xl flex items-center gap-2 transition shadow">
+                                <i class="fa-solid fa-file-csv text-base"></i> تصدير قائمة الزبائن
+                            </button>
+                            <button onclick="exportFullDataJSON()" class="bg-slate-700 hover:bg-slate-600 text-slate-100 font-black text-sm px-4 py-2.5 rounded-xl flex items-center gap-2 border border-slate-600 transition shadow">
+                                <i class="fa-solid fa-database text-base"></i> تصدير النسخة الاحتياطية (JSON)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Import Options -->
+                    <div class="bg-slate-900 border border-slate-700 p-5 rounded-xl space-y-4">
+                        <h4 class="text-base font-black text-amber-400 flex items-center gap-2">
+                            <i class="fa-solid fa-file-import"></i> استيراد البيانات من Excel / CSV
+                        </h4>
+                        <p class="text-xs text-slate-300 font-bold leading-relaxed">
+                            اختر ملف Excel/CSV يحتوي على الأعمدة التالية: <span class="text-amber-400">الاسم، الهاتف، العنوان، الملاحظات</span>.
+                        </p>
+                        <div class="flex items-center gap-3 pt-1">
+                            <input type="file" id="importExcelInput" accept=".csv, .txt, .json" class="hidden" onchange="handleFileImport(event)">
+                            <button onclick="document.getElementById('importExcelInput').click()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-sm px-5 py-2.5 rounded-xl flex items-center gap-2 transition shadow">
+                                <i class="fa-solid fa-upload text-base"></i> اختيار ملف والاستيراد
+                            </button>
+                            <span id="importFileName" class="text-xs text-slate-400 font-bold truncate">لم يتم اختيار ملف</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab 3: Actions & Calls -->
+        <section id="sec-actions" class="tab-content hidden space-y-6">
+            <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl p-6 shadow-xl space-y-6">
+                <div>
+                    <h2 class="text-xl font-black text-white mb-1">مركز الاتصالات والإجراءات المباشرة</h2>
+                    <p class="text-sm text-slate-300 font-semibold">ابحث عن الزبون لتنفيذ عمليات إضافة دين، تسديد، أو تدوين المكالمات المباشرة</p>
+                </div>
+
+                <div class="relative max-w-xl">
+                    <i class="fa-solid fa-magnifying-glass absolute right-4 top-4 text-slate-400 text-lg"></i>
+                    <input type="text" id="actionSearchInput" oninput="filterCustomerSelect()" placeholder="ابحث باسم الزبون أو رقم الهاتف..." class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl pr-12 pl-4 py-3.5 text-base font-bold text-white focus:outline-none focus:border-amber-500 shadow-inner">
+                </div>
+
+                <div id="selectedCustomerCard" class="hidden bg-slate-900 border-2 border-slate-700 rounded-2xl p-6 space-y-6">
+                    <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+                        <div>
+                            <h3 class="text-2xl font-black text-amber-400" id="actionCustName">-</h3>
+                            <p class="text-sm text-slate-300 font-bold mt-1" id="actionCustPhone">-</p>
+                        </div>
+                        <div class="flex items-center gap-4 text-base font-black">
+                            <span class="bg-slate-800 px-4 py-2 rounded-xl border border-slate-700 text-slate-200 shadow" id="actionCustTotal">الإجمالي: 0</span>
+                            <span class="bg-rose-500/20 border border-rose-500/40 text-rose-300 px-4 py-2 rounded-xl shadow" id="actionCustRemaining">المتبقي: 0</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <button onclick="openAddDebtModal()" class="bg-rose-600 hover:bg-rose-700 text-white font-black text-base p-4 rounded-xl flex items-center justify-center gap-2 transition shadow-lg">
+                            <i class="fa-solid fa-file-circle-plus text-xl"></i> إضافة دين جديد
+                        </button>
+                        <button onclick="openPayDebtModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-base p-4 rounded-xl flex items-center justify-center gap-2 transition shadow-lg">
+                            <i class="fa-solid fa-receipt text-xl"></i> تسديد دين وطباعة وصل
+                        </button>
+                        <button onclick="openCallModal()" class="bg-sky-600 hover:bg-sky-700 text-white font-black text-base p-4 rounded-xl flex items-center justify-center gap-2 transition shadow-lg">
+                            <i class="fa-solid fa-phone text-xl"></i> تسجيل مكالمة / موعد
+                        </button>
+                    </div>
+                </div>
+
+                <div id="actionSearchResults" class="space-y-2"></div>
+            </div>
+        </section>
+
+        <!-- Tab 4: Logs Summary Table -->
+        <section id="sec-logs" class="tab-content hidden space-y-6">
+            <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl p-6 shadow-xl space-y-6">
+                <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-700 pb-4">
+                    <div>
+                        <h2 class="text-xl font-black text-white">سجلات الحسابات والعملاء</h2>
+                        <p class="text-sm text-slate-300 font-semibold">قائمة ملخصة لأسماء الزبائن وإجمالي الديون والتسديدات مع إمكانية استعراض التفاصيل الكاملة والفلترة</p>
+                    </div>
+                    <button onclick="printGlobalReport()" class="bg-slate-700 hover:bg-slate-600 text-white font-black px-5 py-3 rounded-xl flex items-center gap-2 border border-slate-600 shadow-lg transition text-base">
+                        <i class="fa-solid fa-print text-lg"></i> طباعة كشف عام A4
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right text-base text-slate-100">
+                        <thead class="bg-slate-900 text-slate-300 uppercase text-xs font-black">
+                            <tr>
+                                <th class="p-4">اسم الزبون</th>
+                                <th class="p-4 text-rose-400">إجمالي الديون</th>
+                                <th class="p-4 text-emerald-400">إجمالي التسديدات</th>
+                                <th class="p-4 text-amber-400">الرصيد المتبقي</th>
+                                <th class="p-4 text-center">الإجراءات والعمليات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logsSummaryTableBody" class="divide-y divide-slate-700"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modals -->
+
+    <!-- Add/Edit Customer Modal -->
+    <div id="customerModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4 no-print">
+        <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="text-xl font-black text-white" id="customerModalTitle">إضافة زبون جديد</h3>
+                <button onclick="toggleModal('customerModal', false)" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
+            </div>
+            <form id="customerForm" onsubmit="handleSaveCustomer(event)" class="space-y-4 text-base font-bold">
+                <input type="hidden" id="editCustId">
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">اسم الزبون *</label>
+                    <input type="text" id="custName" required class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">رقم الهاتف *</label>
+                    <input type="text" id="custPhone" required class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">العنوان</label>
+                    <input type="text" id="custAddress" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">ملاحظات (اختياري)</label>
+                    <textarea id="custNotes" rows="2" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-amber-500"></textarea>
+                </div>
+                <div class="pt-3 flex justify-end gap-3">
+                    <button type="button" onclick="toggleModal('customerModal', false)" class="px-5 py-2.5 bg-slate-700 text-slate-200 rounded-xl font-bold">إلغاء</button>
+                    <button type="submit" class="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl shadow-md">حفظ البيانات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Customer Detailed Log Modal -->
+    <div id="customerDetailsModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4 no-print">
+        <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl max-w-5xl w-full p-6 space-y-5 shadow-2xl max-h-[92vh] flex flex-col">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <div>
+                    <h3 class="text-2xl font-black text-amber-400" id="detailCustName">-</h3>
+                    <p class="text-sm text-slate-300 font-bold mt-1" id="detailCustSub">-</p>
+                </div>
+                <button onclick="toggleModal('customerDetailsModal', false)" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-3xl"></i></button>
+            </div>
+
+            <!-- Filters Bar -->
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 bg-slate-900 p-4 rounded-xl border border-slate-700 text-sm font-bold">
+                <div>
+                    <label class="block text-slate-300 mb-1">تصفية حسب نوع الحركة:</label>
+                    <select id="detailTypeFilter" onchange="renderCustomerDetailsContent()" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-amber-500">
+                        <option value="all">كافة الحركات (تسديد + ديون)</option>
+                        <option value="pay">عمليات التسديد فقط</option>
+                        <option value="debt">عمليات الديون فقط</option>
+                        <option value="calls">سجل الاتصالات والاتفاقات فقط</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1">تصفية حسب الفترة:</label>
+                    <select id="detailTimeFilter" onchange="renderCustomerDetailsContent()" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-amber-500">
+                        <option value="all">كافة الأوقات والتواريخ</option>
+                        <option value="today">اليوم فقط</option>
+                        <option value="month">الشهر الحالي</option>
+                        <option value="year">السنة الحالية</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1">ترتيب التواريخ:</label>
+                    <select id="detailSortOrder" onchange="renderCustomerDetailsContent()" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-amber-500">
+                        <option value="desc">من الأحدث إلى الأقدم</option>
+                        <option value="asc">من الأقدم إلى الأحدث</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button onclick="printFilteredCustomerStatement()" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-black p-2.5 rounded-lg flex items-center justify-center gap-2 shadow-lg transition">
+                        <i class="fa-solid fa-print text-lg"></i> طباعة الكشف الحالي A4
+                    </button>
+                </div>
+            </div>
+
+            <!-- Detailed Log Content -->
+            <div class="flex-1 overflow-y-auto space-y-4 pr-1" id="detailModalBody"></div>
+        </div>
+    </div>
+
+    <!-- Add Debt Modal -->
+    <div id="addDebtModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4 no-print">
+        <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="text-xl font-black text-white">إضافة دين جديد</h3>
+                <button onclick="toggleModal('addDebtModal', false)" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
+            </div>
+            <form onsubmit="handleAddDebt(event)" class="space-y-4 text-base font-bold">
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">تاريخ الدين</label>
+                    <input type="date" id="debtDate" required class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">المبلغ (د.ع) *</label>
+                    <input type="number" id="debtAmount" min="1" required class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">تفاصيل الدين / البيان</label>
+                    <input type="text" id="debtNote" placeholder="مثال: تجهيز خرسانة جاهزة - وجبة 1" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white">
+                </div>
+                <div class="pt-3 flex justify-end gap-3">
+                    <button type="button" onclick="toggleModal('addDebtModal', false)" class="px-5 py-2.5 bg-slate-700 text-slate-200 rounded-xl font-bold">إلغاء</button>
+                    <button type="submit" class="px-6 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl shadow-md">إضافة الدين</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Pay Debt Modal -->
+    <div id="payDebtModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4 no-print">
+        <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="text-xl font-black text-white">تسديد مبلغ وحفظ وصل</h3>
+                <button onclick="toggleModal('payDebtModal', false)" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
+            </div>
+            <form onsubmit="handlePayDebt(event)" class="space-y-4 text-base font-bold">
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">تاريخ التسديد</label>
+                    <input type="date" id="payDate" required class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">المبلغ المسدد (د.ع) *</label>
+                    <input type="number" id="payAmount" min="1" required class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">ملاحظات التسديد</label>
+                    <input type="text" id="payNote" placeholder="مثال: تسديد نقدي / تحويل" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white">
+                </div>
+                <div class="pt-3 flex justify-end gap-3">
+                    <button type="button" onclick="toggleModal('payDebtModal', false)" class="px-5 py-2.5 bg-slate-700 text-slate-200 rounded-xl font-bold">إلغاء</button>
+                    <button type="submit" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl shadow-md">تسديد وطباعة وصل</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Record Call Modal -->
+    <div id="callModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4 no-print">
+        <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="text-xl font-black text-white">تسجيل مكالمة / تحديد موعد تسديد</h3>
+                <button onclick="toggleModal('callModal', false)" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
+            </div>
+            <form onsubmit="handleRecordCall(event)" class="space-y-4 text-base font-bold">
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">موعد التسديد المتفق عليه (إن وجد)</label>
+                    <input type="date" id="callTargetDate" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">نتيجة المكالمة / الملاحظات *</label>
+                    <select id="callPresetNote" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white mb-2" onchange="document.getElementById('callCustomNote').value = this.value">
+                        <option value="">-- اختر ملاحظة جاهزة أو اكتب أدناه --</option>
+                        <option value="لم يرد على الاتصال">لم يرد على الاتصال</option>
+                        <option value="الجهاز مغلق / لا توجد تغطية">الجهاز مغلق / لا توجد تغطية</option>
+                        <option value="بلغني بأنه يوجد لديه عذر أو مشكلة مالية">بلغني بأنه يوجد لديه عذر أو مشكلة مالية</option>
+                        <option value="تم الاتفاق على التسديد في الموعد المحدد">تم الاتفاق على التسديد في الموعد المحدد</option>
+                    </select>
+                    <textarea id="callCustomNote" rows="3" required placeholder="اكتب ملاحظة التفاصيل هنا..." class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white"></textarea>
+                </div>
+                <div class="pt-3 flex justify-end gap-3">
+                    <button type="button" onclick="toggleModal('callModal', false)" class="px-5 py-2.5 bg-slate-700 text-slate-200 rounded-xl font-bold">إلغاء</button>
+                    <button type="submit" class="px-6 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-black rounded-xl shadow-md">حفظ المكالمة</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Printable A4 Container (High Contrast Print View) -->
+    <div id="printableArea" class="p-8 hidden">
+        <div id="printBody"></div>
+        <div class="mt-20 border-t-2 border-black pt-4 flex justify-end text-sm text-black font-black">
+            <p>مسؤول الحسابات / أمين الصندوق: ....................................</p>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs & Application Logic (Modular ES v11/v13) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js";
+        import { getDatabase, ref, set, onValue, remove, update } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBl1kGRHEW98Qil9GGT43XUsQHlELjdheI",
+            authDomain: "sajjad-d77b9.firebaseapp.com",
+            databaseURL: "https://sajjad-d77b9-default-rtdb.firebaseio.com",
+            projectId: "sajjad-d77b9",
+            storageBucket: "sajjad-d77b9.firebasestorage.app",
+            messagingSenderId: "569217256478",
+            appId: "1:569217256478:web:c8ef6cf365f9cc199e320f",
+            measurementId: "G-D8GY4K08KY"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getDatabase(app);
+
+        // Make variables global so standard onclick handlers work seamlessly
+        window.customers = [];
+        window.transactions = [];
+        window.calls = [];
+        window.selectedCustomerId = null;
+        window.activeDetailCustId = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const todayStr = new Date().toISOString().split('T')[0];
+            document.getElementById('debtDate').value = todayStr;
+            document.getElementById('payDate').value = todayStr;
+            document.getElementById('currentDateDisplay').innerText = new Date().toLocaleDateString('ar-IQ', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            
+            initFirebaseListeners();
+        });
+
+        function initFirebaseListeners() {
+            const statusBadge = document.getElementById('firebaseStatus');
+            
+            // Listen to connection state
+            onValue(ref(db, '.info/connected'), (snapshot) => {
+                if (snapshot.val() === true) {
+                    statusBadge.className = "text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-3 py-1.5 rounded-lg font-bold flex items-center gap-2";
+                    statusBadge.innerHTML = `<i class="fa-solid fa-circle text-emerald-400"></i> متصل بـ Firebase`;
+                } else {
+                    statusBadge.className = "text-xs bg-rose-500/20 text-rose-300 border border-rose-500/40 px-3 py-1.5 rounded-lg font-bold flex items-center gap-2";
+                    statusBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-400"></i> جاري الاتصال...`;
+                }
+            });
+
+            // Customers Listener
+            onValue(ref(db, 'qaleb_debts/customers'), (snapshot) => {
+                const data = snapshot.val();
+                window.customers = data ? Object.values(data) : [];
+                refreshUI();
+            });
+
+            // Transactions Listener
+            onValue(ref(db, 'qaleb_debts/transactions'), (snapshot) => {
+                const data = snapshot.val();
+                window.transactions = data ? Object.values(data) : [];
+                refreshUI();
+            });
+
+            // Calls Listener
+            onValue(ref(db, 'qaleb_debts/calls'), (snapshot) => {
+                const data = snapshot.val();
+                window.calls = data ? Object.values(data) : [];
+                refreshUI();
+            });
+        }
+
+        window.refreshUI = function() {
+            renderOverview();
+            renderCustomersTable();
+            renderLogsSummaryTable();
+            if (window.selectedCustomerId) {
+                selectCustomerForAction(window.selectedCustomerId);
+            }
+            if (window.activeDetailCustId && !document.getElementById('customerDetailsModal').classList.contains('hidden')) {
+                renderCustomerDetailsContent();
+            }
+        };
+
+        window.switchTab = function(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('border-b-4', 'border-amber-500', 'text-amber-400');
+                el.classList.add('text-slate-300');
+            });
+
+            document.getElementById('sec-' + tabName).classList.remove('hidden');
+            const activeBtn = document.getElementById('tab-' + tabName);
+            activeBtn.classList.add('border-b-4', 'border-amber-500', 'text-amber-400');
+            activeBtn.classList.remove('text-slate-300');
+
+            if (tabName === 'overview') renderOverview();
+            if (tabName === 'customers') renderCustomersTable();
+            if (tabName === 'logs') renderLogsSummaryTable();
+        };
+
+        window.toggleModal = function(id, show) {
+            const modal = document.getElementById(id);
+            if (show) modal.classList.remove('hidden');
+            else modal.classList.add('hidden');
+        };
+
+        window.formatCurr = function(num) {
+            return Number(num || 0).toLocaleString('ar-IQ') + ' د.ع';
+        };
+
+        // ================= Tab 1: Overview =================
+        function renderOverview() {
+            let totalRemaining = 0;
+            let totalOriginal = 0;
+            let dueTodayAmount = 0;
+            let dueTodayCount = 0;
+
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth();
+            let monthCollected = 0;
+
+            window.transactions.forEach(t => {
+                const tDate = new Date(t.date);
+                if (t.type === 'pay') {
+                    if (tDate.getFullYear() === currentYear && tDate.getMonth() === currentMonth) {
+                        monthCollected += Number(t.amount);
+                    }
+                }
+            });
+
+            const alertsList = document.getElementById('alertsList');
+            alertsList.innerHTML = '';
+            let alertCount = 0;
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            window.customers.forEach(cust => {
+                const custTrans = window.transactions.filter(t => t.customerId === cust.id);
+                const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
+                const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
+                const remaining = debtSum - paySum;
+
+                totalOriginal += debtSum;
+                totalRemaining += remaining;
+
+                const custCalls = window.calls.filter(c => c.customerId === cust.id && c.targetDate);
+                custCalls.forEach(c => {
+                    if (remaining > 0 && c.targetDate <= todayStr) {
+                        alertCount++;
+                        dueTodayAmount += remaining;
+                        dueTodayCount++;
+
+                        const isLate = c.targetDate < todayStr;
+                        alertsList.innerHTML += `
+                            <div class="bg-slate-900 border-2 ${isLate ? 'border-rose-500/60' : 'border-amber-500/60'} p-4 rounded-xl flex items-center justify-between shadow-lg">
+                                <div class="space-y-1">
+                                    <div class="flex items-center gap-3">
+                                        <span class="font-black text-lg text-white">${cust.name}</span>
+                                        <span class="text-xs ${isLate ? 'bg-rose-500/30 text-rose-300 border border-rose-500' : 'bg-amber-500/30 text-amber-300 border border-amber-500'} px-3 py-1 rounded-md font-black">
+                                            ${isLate ? 'متأخر عن الموعد' : 'مستحق اليوم'}
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-slate-300 font-bold">موعد التسديد: ${c.targetDate} | الهاتف: ${cust.phone}</p>
+                                    <p class="text-sm text-slate-200 font-bold">الملاحظة: ${c.note}</p>
+                                </div>
+                                <div class="text-left">
+                                    <p class="text-base font-black text-rose-400">${window.formatCurr(remaining)}</p>
+                                    <button onclick="selectCustomerForAction('${cust.id}')" class="mt-2 text-xs bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-600 px-3 py-1.5 rounded-lg font-black">إجراء تسديد/اتصال</button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+            });
+
+            if (alertCount === 0) {
+                alertsList.innerHTML = `<p class="text-center text-base text-slate-400 py-6 font-bold">لا توجد تنبيهات تأخير أو استحقاقات مسجلة لهذا اليوم.</p>`;
+            }
+
+            document.getElementById('statTotalRemaining').innerText = window.formatCurr(totalRemaining);
+            document.getElementById('statTotalOriginal').innerText = `إجمالي الديون الأصلية: ` + window.formatCurr(totalOriginal);
+            document.getElementById('statMonthCollected').innerText = window.formatCurr(monthCollected);
+            document.getElementById('statDueToday').innerText = window.formatCurr(dueTodayAmount);
+            document.getElementById('statDueCount').innerText = `عدد الزبائن المستحقين: ${dueTodayCount}`;
+            document.getElementById('alertsBadge').innerText = `${alertCount} تنبيهات`;
+        }
+
+        // ================= Tab 2: Customers =================
+        window.openAddCustomerModal = function() {
+            document.getElementById('customerModalTitle').innerText = 'إضافة زبون جديد';
+            document.getElementById('editCustId').value = '';
+            document.getElementById('customerForm').reset();
+            window.toggleModal('customerModal', true);
+        };
+
+        window.openEditCustomerModal = function(custID) {
+            const cust = window.customers.find(c => c.id === custID);
+            if (!cust) return;
+
+            document.getElementById('customerModalTitle').innerText = 'تعديل بيانات الزبون';
+            document.getElementById('editCustId').value = cust.id;
+            document.getElementById('custName').value = cust.name;
+            document.getElementById('custPhone').value = cust.phone;
+            document.getElementById('custAddress').value = cust.address || '';
+            document.getElementById('custNotes').value = cust.notes || '';
+            window.toggleModal('customerModal', true);
+        };
+
+        window.handleSaveCustomer = function(e) {
+            e.preventDefault();
+            const editId = document.getElementById('editCustId').value;
+            const name = document.getElementById('custName').value.trim();
+            const phone = document.getElementById('custPhone').value.trim();
+            const address = document.getElementById('custAddress').value.trim();
+            const notes = document.getElementById('custNotes').value.trim();
+
+            if (editId) {
+                update(ref(db, 'qaleb_debts/customers/' + editId), { name, phone, address, notes })
+                    .then(() => window.toggleModal('customerModal', false))
+                    .catch(err => alert('خطأ: ' + err.message));
+            } else {
+                const newId = 'CUST_' + Date.now();
+                const newCust = {
+                    id: newId,
+                    name, phone, address, notes,
+                    createdAt: new Date().toISOString().split('T')[0]
+                };
+                set(ref(db, 'qaleb_debts/customers/' + newId), newCust)
+                    .then(() => window.toggleModal('customerModal', false))
+                    .catch(err => alert('خطأ: ' + err.message));
+            }
+        };
+
+        window.deleteCustomer = function(custID) {
+            const cust = window.customers.find(c => c.id === custID);
+            if (!cust) return;
+
+            if (confirm(`هل أنت متأكد من حذف الزبون (${cust.name}) وكافة ديونه وسجلاته نهائياً من قاعدة البيانات؟`)) {
+                remove(ref(db, 'qaleb_debts/customers/' + custID));
+                window.transactions.forEach(t => {
+                    if (t.customerId === custID) remove(ref(db, 'qaleb_debts/transactions/' + t.id));
+                });
+                window.calls.forEach(c => {
+                    if (c.customerId === custID) remove(ref(db, 'qaleb_debts/calls/' + c.id));
+                });
+            }
+        };
+
+        function renderCustomersTable() {
+            const tbody = document.getElementById('customersTableBody');
+            tbody.innerHTML = '';
+
+            if (window.customers.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center text-slate-400 py-8 font-bold text-base">لا يوجد زبائن مضافون حتى الآن.</td></tr>`;
+                return;
+            }
+
+            window.customers.forEach(cust => {
+                const custTrans = window.transactions.filter(t => t.customerId === cust.id);
+                const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
+                const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
+                const remaining = debtSum - paySum;
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-700/40">
+                        <td class="p-3.5 font-black text-white text-base">${cust.name}</td>
+                        <td class="p-3.5 text-slate-300 font-bold text-xs">${cust.createdAt}</td>
+                        <td class="p-3.5 text-amber-300 font-mono font-bold text-sm">${cust.phone}</td>
+                        <td class="p-3.5 text-slate-300 font-bold">${cust.address || '-'}</td>
+                        <td class="p-3.5 font-black text-slate-100">${window.formatCurr(debtSum)}</td>
+                        <td class="p-3.5 font-black text-base ${remaining > 0 ? 'text-rose-400' : 'text-emerald-400'}">${window.formatCurr(remaining)}</td>
+                        <td class="p-3.5 text-slate-300 text-xs font-bold max-w-xs truncate">${cust.notes || '-'}</td>
+                        <td class="p-3.5 text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                <button onclick="selectCustomerForAction('${cust.id}')" class="bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 border border-amber-500/50 px-3 py-1.5 rounded-lg text-xs font-black transition">
+                                    إدارة
+                                </button>
+                                <button onclick="deleteCustomer('${cust.id}')" class="bg-rose-600/20 hover:bg-rose-600/40 text-rose-300 border border-rose-500/50 px-3 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1">
+                                    <i class="fa-solid fa-trash-can"></i> حذف
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // ================= Tab 2: Export & Import =================
+        window.exportCustomersToCSV = function() {
+            if (window.customers.length === 0) {
+                alert('لا توجد بيانات زبائن لتصديرها.');
+                return;
+            }
+
+            let csvContent = "\uFEFF";
+            csvContent += "اسم الزبون,رقم الهاتف,العنوان,تاريخ الإنشاء,إجمالي الديون (د.ع),إجمالي المسدد (د.ع),الرصيد المتبقي (د.ع),ملاحظات\n";
+
+            window.customers.forEach(cust => {
+                const custTrans = window.transactions.filter(t => t.customerId === cust.id);
+                const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
+                const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
+                const remaining = debtSum - paySum;
+
+                const name = `"${(cust.name || '').replace(/"/g, '""')}"`;
+                const phone = `"${(cust.phone || '').replace(/"/g, '""')}"`;
+                const address = `"${(cust.address || '').replace(/"/g, '""')}"`;
+                const created = `"${cust.createdAt || ''}"`;
+                const notes = `"${(cust.notes || '').replace(/"/g, '""')}"`;
+
+                csvContent += `${name},${phone},${address},${created},${debtSum},${paySum},${remaining},${notes}\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            const todayStr = new Date().toISOString().split('T')[0];
+            link.setAttribute("href", url);
+            link.setAttribute("download", `قائمة_زبائن_معامل_القالب_${todayStr}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        window.exportFullDataJSON = function() {
+            const dataObj = { customers: window.customers, transactions: window.transactions, calls: window.calls };
+            const jsonStr = JSON.stringify(dataObj, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            const todayStr = new Date().toISOString().split('T')[0];
+            link.setAttribute("href", url);
+            link.setAttribute("download", `نسخة_احتياطية_معامل_القالب_${todayStr}.json`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        window.handleFileImport = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            document.getElementById('importFileName').innerText = file.name;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                if (file.name.endsWith('.json')) {
+                    try {
+                        const parsed = JSON.parse(content);
+                        if (parsed.customers && Array.isArray(parsed.customers)) {
+                            if (confirm(`هل تريد رفع ودمج ${parsed.customers.length} زبون إلى قاعدة البيانات؟`)) {
+                                parsed.customers.forEach(c => set(ref(db, 'qaleb_debts/customers/' + c.id), c));
+                                if (parsed.transactions) parsed.transactions.forEach(t => set(ref(db, 'qaleb_debts/transactions/' + t.id), t));
+                                if (parsed.calls) parsed.calls.forEach(cl => set(ref(db, 'qaleb_debts/calls/' + cl.id), cl));
+                                alert('تم استيراد البيانات إلى Firebase بنجاح!');
+                            }
+                        }
+                    } catch(err) {
+                        alert('خطأ في قراءة ملف JSON.');
+                    }
+                } else {
+                    const lines = content.split(/\r\n|\n/);
+                    let addedCount = 0;
+                    lines.forEach((line, index) => {
+                        if (index === 0 || !line.trim()) return;
+                        const cols = line.split(/,(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)/).map(c => c.replace(/^"|"$/g, '').trim());
+                        if (cols.length >= 2 && cols[0]) {
+                            const name = cols[0];
+                            const phone = cols[1] || '';
+                            const address = cols[2] || '';
+                            const notes = cols[7] || cols[3] || '';
+
+                            const exists = window.customers.some(c => c.phone === phone && c.name === name);
+                            if (!exists) {
+                                const newId = 'CUST_' + (Date.now() + index);
+                                const newCust = { id: newId, name, phone, address, notes, createdAt: new Date().toISOString().split('T')[0] };
+                                set(ref(db, 'qaleb_debts/customers/' + newId), newCust);
+                                addedCount++;
+                            }
+                        }
+                    });
+                    alert(`تم رفع واستيراد ${addedCount} زبون جديد بنجاح!`);
+                }
+            };
+            reader.readAsText(file, 'UTF-8');
+        };
+
+        // ================= Tab 3: Actions =================
+        window.filterCustomerSelect = function() {
+            const query = document.getElementById('actionSearchInput').value.toLowerCase().trim();
+            const resultsContainer = document.getElementById('actionSearchResults');
+            resultsContainer.innerHTML = '';
+
+            if (!query) return;
+
+            const filtered = window.customers.filter(c => c.name.toLowerCase().includes(query) || c.phone.includes(query));
+            filtered.forEach(cust => {
+                resultsContainer.innerHTML += `
+                    <div onclick="selectCustomerForAction('${cust.id}')" class="p-4 bg-slate-900 hover:bg-slate-700/80 rounded-xl border border-slate-700 cursor-pointer flex justify-between items-center transition">
+                        <div>
+                            <p class="font-black text-lg text-white">${cust.name}</p>
+                            <p class="text-xs text-slate-300 font-bold">${cust.phone} | ${cust.address || 'بلا عنوان'}</p>
+                        </div>
+                        <span class="text-sm text-amber-400 font-black">اختيار الزبون &larr;</span>
+                    </div>
+                `;
+            });
+        };
+
+        window.selectCustomerForAction = function(custID) {
+            window.selectedCustomerId = custID;
+            const cust = window.customers.find(c => c.id === custID);
+            if (!cust) return;
+
+            window.switchTab('actions');
+            document.getElementById('selectedCustomerCard').classList.remove('hidden');
+            document.getElementById('actionSearchResults').innerHTML = '';
+            document.getElementById('actionSearchInput').value = '';
+
+            const custTrans = window.transactions.filter(t => t.customerId === cust.id);
+            const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
+            const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
+            const remaining = debtSum - paySum;
+
+            document.getElementById('actionCustName').innerText = cust.name;
+            document.getElementById('actionCustPhone').innerText = `رقم الهاتف: ${cust.phone} | العنوان: ${cust.address || 'غير محدد'}`;
+            document.getElementById('actionCustTotal').innerText = `إجمالي الديون: ` + window.formatCurr(debtSum);
+            document.getElementById('actionCustRemaining').innerText = `المتبقي: ` + window.formatCurr(remaining);
+        };
+
+        window.openAddDebtModal = function() { if (window.selectedCustomerId) window.toggleModal('addDebtModal', true); };
+        window.openPayDebtModal = function() { if (window.selectedCustomerId) window.toggleModal('payDebtModal', true); };
+        window.openCallModal = function() { if (window.selectedCustomerId) window.toggleModal('callModal', true); };
+
+        window.handleAddDebt = function(e) {
+            e.preventDefault();
+            const trxId = 'TRX_' + Date.now();
+            const newTrx = {
+                id: trxId,
+                customerId: window.selectedCustomerId,
+                type: 'debt',
+                date: document.getElementById('debtDate').value,
+                amount: Number(document.getElementById('debtAmount').value),
+                note: document.getElementById('debtNote').value.trim()
+            };
+
+            set(ref(db, 'qaleb_debts/transactions/' + trxId), newTrx).then(() => {
+                window.toggleModal('addDebtModal', false);
+                window.selectCustomerForAction(window.selectedCustomerId);
+            });
+        };
+
+        window.handlePayDebt = function(e) {
+            e.preventDefault();
+            const trxId = 'TRX_' + Date.now();
+            const newTrx = {
+                id: trxId,
+                customerId: window.selectedCustomerId,
+                type: 'pay',
+                date: document.getElementById('payDate').value,
+                amount: Number(document.getElementById('payAmount').value),
+                note: document.getElementById('payNote').value.trim()
+            };
+
+            set(ref(db, 'qaleb_debts/transactions/' + trxId), newTrx).then(() => {
+                window.toggleModal('payDebtModal', false);
+                window.selectCustomerForAction(window.selectedCustomerId);
+                window.printSingleTransactionReceipt(newTrx.id);
+            });
+        };
+
+        window.handleRecordCall = function(e) {
+            e.preventDefault();
+            const callId = 'CALL_' + Date.now();
+            const newCall = {
+                id: callId,
+                customerId: window.selectedCustomerId,
+                date: new Date().toISOString().split('T')[0],
+                targetDate: document.getElementById('callTargetDate').value,
+                note: document.getElementById('callCustomNote').value.trim()
+            };
+
+            set(ref(db, 'qaleb_debts/calls/' + callId), newCall).then(() => {
+                window.toggleModal('callModal', false);
+            });
+        };
+
+        // ================= Tab 4: Logs Summary =================
+        function renderLogsSummaryTable() {
+            const tbody = document.getElementById('logsSummaryTableBody');
+            tbody.innerHTML = '';
+
+            if (window.customers.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-slate-400 py-8 font-bold text-base">لا توجد سجلات زبائن مسجلة.</td></tr>`;
+                return;
+            }
+
+            window.customers.forEach(cust => {
+                const custTrans = window.transactions.filter(t => t.customerId === cust.id);
+                const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
+                const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
+                const remaining = debtSum - paySum;
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-700/40">
+                        <td class="p-4 font-black text-white text-lg">${cust.name}</td>
+                        <td class="p-4 font-black text-rose-400 text-base">${window.formatCurr(debtSum)}</td>
+                        <td class="p-4 font-black text-emerald-400 text-base">${window.formatCurr(paySum)}</td>
+                        <td class="p-4 font-black ${remaining > 0 ? 'text-amber-400' : 'text-slate-300'} text-base">${window.formatCurr(remaining)}</td>
+                        <td class="p-4 text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                <button onclick="openCustomerDetailsModal('${cust.id}')" class="bg-sky-600/30 hover:bg-sky-600/50 text-sky-300 border border-sky-500/50 px-3.5 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5">
+                                    <i class="fa-solid fa-list-check"></i> التفاصيل والتصفية
+                                </button>
+                                <button onclick="openEditCustomerModal('${cust.id}')" class="bg-amber-500/30 hover:bg-amber-500/50 text-amber-300 border border-amber-500/50 px-3.5 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5">
+                                    <i class="fa-solid fa-pen-to-square"></i> تعديل
+                                </button>
+                                <button onclick="deleteCustomer('${cust.id}')" class="bg-rose-600/30 hover:bg-rose-600/50 text-rose-300 border border-rose-500/50 px-3.5 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5">
+                                    <i class="fa-solid fa-trash-can"></i> حذف
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        window.openCustomerDetailsModal = function(custID) {
+            window.activeDetailCustId = custID;
+            const cust = window.customers.find(c => c.id === custID);
+            if (!cust) return;
+
+            document.getElementById('detailCustName').innerText = cust.name;
+            document.getElementById('detailCustSub').innerText = `رقم الهاتف: ${cust.phone} | العنوان: ${cust.address || 'غير محدد'} | ملاحظات: ${cust.notes || 'لا يوجد'}`;
+            
+            document.getElementById('detailTypeFilter').value = 'all';
+            document.getElementById('detailTimeFilter').value = 'all';
+            document.getElementById('detailSortOrder').value = 'desc';
+
+            window.renderCustomerDetailsContent();
+            window.toggleModal('customerDetailsModal', true);
+        };
+
+        window.renderCustomerDetailsContent = function() {
+            if (!window.activeDetailCustId) return;
+            const cust = window.customers.find(c => c.id === window.activeDetailCustId);
+            if (!cust) return;
+
+            const typeFilter = document.getElementById('detailTypeFilter').value;
+            const timeFilter = document.getElementById('detailTimeFilter').value;
+            const sortOrder = document.getElementById('detailSortOrder').value;
+            const body = document.getElementById('detailModalBody');
+
+            let allCustTrans = window.transactions.filter(t => t.customerId === cust.id);
+            let custCalls = window.calls.filter(c => c.customerId === cust.id);
+
+            const totalDebt = allCustTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
+            const totalPay = allCustTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
+            const overallRemaining = totalDebt - totalPay;
+
+            let filteredTrans = [...allCustTrans];
+
+            if (typeFilter === 'pay') filteredTrans = filteredTrans.filter(t => t.type === 'pay');
+            if (typeFilter === 'debt') filteredTrans = filteredTrans.filter(t => t.type === 'debt');
+
+            const now = new Date();
+            const todayStr = now.toISOString().split('T')[0];
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth();
+
+            if (timeFilter !== 'all') {
+                filteredTrans = filteredTrans.filter(t => {
+                    const tDate = new Date(t.date);
+                    if (timeFilter === 'today') return t.date === todayStr;
+                    if (timeFilter === 'month') return tDate.getFullYear() === currentYear && tDate.getMonth() === currentMonth;
+                    if (timeFilter === 'year') return tDate.getFullYear() === currentYear;
+                    return true;
+                });
+            }
+
+            filteredTrans.sort((a, b) => {
+                if (sortOrder === 'asc') return new Date(a.date) - new Date(b.date);
+                return new Date(b.date) - new Date(a.date);
+            });
+
+            let runningBal = 0;
+            const chronoTrans = [...allCustTrans].sort((a, b) => new Date(a.date) - new Date(b.date));
+            const balanceMap = {};
+            chronoTrans.forEach(t => {
+                if (t.type === 'debt') runningBal += Number(t.amount);
+                else runningBal -= Number(t.amount);
+                balanceMap[t.id] = runningBal;
+            });
+
+            let htmlContent = `
+                <div class="flex flex-wrap justify-between items-center bg-slate-900 p-4 rounded-xl border border-slate-700 text-sm font-black gap-2 shadow-inner">
+                    <span class="text-slate-200">إجمالي الديون التراكمية: <b class="text-rose-400 text-base">${window.formatCurr(totalDebt)}</b></span>
+                    <span class="text-slate-200">إجمالي المقبوضات/التسديدات: <b class="text-emerald-400 text-base">${window.formatCurr(totalPay)}</b></span>
+                    <span class="text-slate-200">الرصيد المتبقي الإجمالي: <b class="${overallRemaining > 0 ? 'text-amber-400' : 'text-slate-300'} text-base">${window.formatCurr(overallRemaining)}</b></span>
+                </div>
+            `;
+
+            if (typeFilter !== 'calls') {
+                htmlContent += `
+                    <div>
+                        <h4 class="text-sm font-black text-amber-400 mb-2 uppercase">جدول الحركة المالية التفصيلي:</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-right text-sm text-slate-100 border border-slate-700">
+                                <thead class="bg-slate-900 text-slate-300 font-black">
+                                    <tr>
+                                        <th class="p-3">التسلسل</th>
+                                        <th class="p-3">التاريخ</th>
+                                        <th class="p-3">نوع الحركة</th>
+                                        <th class="p-3">البيان / التفاصيل</th>
+                                        <th class="p-3">المبلغ</th>
+                                        <th class="p-3 text-amber-400">المتبقي بعد الحركة</th>
+                                        <th class="p-3 text-center">طباعة مخصصة</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-800">
+                                    ${filteredTrans.length === 0 ? '<tr><td colspan="7" class="p-5 text-slate-400 text-center font-bold">لا توجد عمليات مالية مطابقة للفلتر المحدد.</td></tr>' : ''}
+                                    ${filteredTrans.map((t, idx) => `
+                                        <tr class="hover:bg-slate-700/30">
+                                            <td class="p-3 font-black text-slate-400">${idx + 1}</td>
+                                            <td class="p-3 font-mono font-bold">${t.date}</td>
+                                            <td class="p-3 font-black ${t.type === 'debt' ? 'text-rose-400' : 'text-emerald-400'}">
+                                                ${t.type === 'debt' ? 'إضافة دين (+)' : 'استلام مبلغ (-)'}
+                                            </td>
+                                            <td class="p-3 text-slate-200 font-semibold">${t.note || '-'}</td>
+                                            <td class="p-3 font-black text-white">${window.formatCurr(t.amount)}</td>
+                                            <td class="p-3 font-black text-amber-400">${window.formatCurr(balanceMap[t.id])}</td>
+                                            <td class="p-3 text-center">
+                                                <button onclick="printSingleTransactionReceipt('${t.id}')" class="bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-600 px-3 py-1.5 rounded-lg text-xs font-black transition">
+                                                    <i class="fa-solid fa-print"></i> طباعة الوصل
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (typeFilter === 'all' || typeFilter === 'calls') {
+                htmlContent += `
+                    <div class="pt-3 border-t border-slate-700">
+                        <h4 class="text-sm font-black text-amber-400 mb-2 uppercase">سجل المكالمات والاتصالات:</h4>
+                        <div class="space-y-2 max-h-48 overflow-y-auto">
+                            ${custCalls.length === 0 ? '<p class="text-sm text-slate-400 py-2 font-bold">لا توجد مكالمات مسجلة.</p>' : ''}
+                            ${custCalls.map(c => `
+                                <div class="text-sm text-slate-200 bg-slate-900 p-3.5 rounded-xl border border-slate-700 flex justify-between items-center font-bold">
+                                    <div>
+                                        <span class="text-amber-400 font-extrabold">[تاريخ الاتصال: ${c.date}]</span>
+                                        <span class="text-slate-200"> | الملاحظة: ${c.note}</span>
+                                    </div>
+                                    <span class="text-xs bg-slate-800 px-3 py-1 rounded-lg border border-slate-700 text-slate-300 font-bold">موعد التسديد المتفق عليه: ${c.targetDate || 'غير محدد'}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            body.innerHTML = htmlContent;
+        };
+
+        // ================= Printing Engine =================
+        function getStandardPrintHeader(docTypeName, cust, dateStr) {
+            return `
+                <div class="text-center border-b-4 border-black pb-4 mb-6 space-y-1">
+                    <h1 class="text-4xl font-black text-black tracking-wider">معامل القالب للكونكريت</h1>
+                    <h2 class="text-2xl font-black text-black">قسم الحسابات</h2>
+                    <div class="pt-3 flex justify-between items-end text-sm font-black text-black border-t-2 border-black mt-3 pt-2">
+                        <div class="text-right space-y-1">
+                            <p class="text-base">اسم الزبون: <span class="text-lg font-black underline">${cust.name}</span></p>
+                            <p>رقم الهاتف: <span>${cust.phone}</span> | العنوان: <span>${cust.address || 'غير محدد'}</span></p>
+                        </div>
+                        <div class="text-left space-y-1">
+                            <p>التاريخ: <span>${dateStr}</span></p>
+                            <p>نوع الحركة: <span class="bg-black text-white px-3 py-0.5 rounded font-black">${docTypeName}</span></p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        window.printSingleTransactionReceipt = function(trxId) {
+            const trx = window.transactions.find(t => t.id === trxId);
+            if (!trx) return;
+
+            const cust = window.customers.find(c => c.id === trx.customerId);
+            const allTrans = window.transactions.filter(t => t.customerId === cust.id);
+            const chronoTrans = [...allTrans].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            let runningBal = 0;
+            let currentBalAtTrx = 0;
+            chronoTrans.forEach(t => {
+                if (t.type === 'debt') runningBal += Number(t.amount);
+                else runningBal -= Number(t.amount);
+                if (t.id === trx.id) currentBalAtTrx = runningBal;
+            });
+
+            const docType = trx.type === 'pay' ? 'وصل تسديد ومقبوضات' : 'وصل إضافة دين جديد';
+            const printBody = document.getElementById('printBody');
+
+            printBody.innerHTML = `
+                ${getStandardPrintHeader(docType, cust, trx.date)}
+                <div class="space-y-6 text-black text-sm">
+                    <h3 class="text-base font-black text-black mb-2">جدول تفاصيل حركة الزبون:</h3>
+                    <table class="w-full text-right border-collapse border-2 border-black">
+                        <thead>
+                            <tr class="bg-gray-200 text-black font-black text-sm">
+                                <th class="border-2 border-black p-3 text-center">التسلسل</th>
+                                <th class="border-2 border-black p-3">تفاصيل الحركة (البيان)</th>
+                                <th class="border-2 border-black p-3">نوع الحركة</th>
+                                <th class="border-2 border-black p-3">المبلغ</th>
+                                <th class="border-2 border-black p-3">المبلغ المتبقي</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="text-black font-black text-base">
+                                <td class="border-2 border-black p-3.5 text-center">1</td>
+                                <td class="border-2 border-black p-3.5">${trx.note || docType}</td>
+                                <td class="border-2 border-black p-3.5">
+                                    ${trx.type === 'debt' ? 'إضافة دين (+)' : 'استلام مبلغ (-)'}
+                                </td>
+                                <td class="border-2 border-black p-3.5">${window.formatCurr(trx.amount)}</td>
+                                <td class="border-2 border-black p-3.5 font-black">${window.formatCurr(currentBalAtTrx)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            document.getElementById('printableArea').classList.remove('hidden');
+            window.print();
+            document.getElementById('printableArea').classList.add('hidden');
+        };
+
+        window.printFilteredCustomerStatement = function() {
+            if (!window.activeDetailCustId) return;
+            const cust = window.customers.find(c => c.id === window.activeDetailCustId);
+            if (!cust) return;
+
+            const typeFilter = document.getElementById('detailTypeFilter').value;
+            const timeFilter = document.getElementById('detailTimeFilter').value;
+            const sortOrder = document.getElementById('detailSortOrder').value;
+
+            let allCustTrans = window.transactions.filter(t => t.customerId === cust.id);
+            let filteredTrans = [...allCustTrans];
+
+            if (typeFilter === 'pay') filteredTrans = filteredTrans.filter(t => t.type === 'pay');
+            if (typeFilter === 'debt') filteredTrans = filteredTrans.filter(t => t.type === 'debt');
+
+            const now = new Date();
+            const todayStr = now.toISOString().split('T')[0];
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth();
+
+            if (timeFilter !== 'all') {
+                filteredTrans = filteredTrans.filter(t => {
+                    const tDate = new Date(t.date);
+                    if (timeFilter === 'today') return t.date === todayStr;
+                    if (timeFilter === 'month') return tDate.getFullYear() === currentYear && tDate.getMonth() === currentMonth;
+                    if (timeFilter === 'year') return tDate.getFullYear() === currentYear;
+                    return true;
+                });
+            }
+
+            filteredTrans.sort((a, b) => {
+                if (sortOrder === 'asc') return new Date(a.date) - new Date(b.date);
+                return new Date(b.date) - new Date(a.date);
+            });
+
+            let runningBal = 0;
+            const chronoTrans = [...allCustTrans].sort((a, b) => new Date(a.date) - new Date(b.date));
+            const balanceMap = {};
+            chronoTrans.forEach(t => {
+                if (t.type === 'debt') runningBal += Number(t.amount);
+                else runningBal -= Number(t.amount);
+                balanceMap[t.id] = runningBal;
+            });
+
+            const totalDebt = allCustTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
+            const totalPay = allCustTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
+            const remaining = totalDebt - totalPay;
+
+            let docTypeTitle = 'كشف حساب تفصيلي كامل';
+            if (typeFilter === 'pay') docTypeTitle = 'كشف عمليات التسديد والمقبوضات';
+            if (typeFilter === 'debt') docTypeTitle = 'كشف عمليات الديون المسجلة';
+
+            const printBody = document.getElementById('printBody');
+            printBody.innerHTML = `
+                ${getStandardPrintHeader(docTypeTitle, cust, todayStr)}
+                <div class="space-y-5 text-black text-sm">
+                    <table class="w-full text-right border-collapse border-2 border-black">
+                        <thead>
+                            <tr class="bg-gray-200 text-black font-black text-sm">
+                                <th class="border-2 border-black p-3 text-center">التسلسل</th>
+                                <th class="border-2 border-black p-3">التاريخ</th>
+                                <th class="border-2 border-black p-3">تفاصيل الحركة (البيان)</th>
+                                <th class="border-2 border-black p-3">نوع الحركة</th>
+                                <th class="border-2 border-black p-3">المبلغ</th>
+                                <th class="border-2 border-black p-3">المبلغ المتبقي</th>
+                            </tr>
+                        </thead>
+                        <tbody class="font-bold text-black text-sm">
+                            ${filteredTrans.map((t, i) => `
+                                <tr>
+                                    <td class="border-2 border-black p-3 text-center font-black">${i + 1}</td>
+                                    <td class="border-2 border-black p-3 font-mono">${t.date}</td>
+                                    <td class="border-2 border-black p-3">${t.note || '-'}</td>
+                                    <td class="border-2 border-black p-3 font-black">${t.type === 'debt' ? 'إضافة دين (+)' : 'تسديد مبلغ (-)'}</td>
+                                    <td class="border-2 border-black p-3 font-black">${window.formatCurr(t.amount)}</td>
+                                    <td class="border-2 border-black p-3 font-black">${window.formatCurr(balanceMap[t.id])}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+
+                    <div class="flex justify-between items-center bg-gray-100 p-4 rounded-lg border-2 border-black text-sm font-black mt-4">
+                        <p>مجموع الديون: ${window.formatCurr(totalDebt)}</p>
+                        <p>مجموع المسدد: ${window.formatCurr(totalPay)}</p>
+                        <p class="text-base text-black underline">إجمالي الرصيد المتبقي الحالي: ${window.formatCurr(remaining)}</p>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('printableArea').classList.remove('hidden');
+            window.print();
+            document.getElementById('printableArea').classList.add('hidden');
+        };
+
+        window.printGlobalReport = function() {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const printBody = document.getElementById('printBody');
+            let rows = '';
+
+            window.customers.forEach((cust, i) => {
+                const custTrans = window.transactions.filter(t => t.customerId === cust.id);
+                const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
+                const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
+                const remaining = debtSum - paySum;
+
+                rows += `
+                    <tr class="font-bold text-black text-sm">
+                        <td class="border-2 border-black p-3 text-center font-black">${i + 1}</td>
+                        <td class="border-2 border-black p-3 font-black text-base">${cust.name}</td>
+                        <td class="border-2 border-black p-3 font-mono">${cust.phone}</td>
+                        <td class="border-2 border-black p-3">${window.formatCurr(debtSum)}</td>
+                        <td class="border-2 border-black p-3">${window.formatCurr(paySum)}</td>
+                        <td class="border-2 border-black p-3 font-black">${window.formatCurr(remaining)}</td>
+                    </tr>
+                `;
+            });
+
+            printBody.innerHTML = `
+                <div class="text-center border-b-4 border-black pb-4 mb-6 space-y-1">
+                    <h1 class="text-4xl font-black text-black">معامل القالب للكونكريت</h1>
+                    <h2 class="text-2xl font-black text-black">قسم الحسابات</h2>
+                    <p class="text-sm font-black text-black pt-2">تقرير وسجل ديون لكافة الزبائن - تاريخ الطباعة: ${todayStr}</p>
+                </div>
+                <div class="space-y-4 text-black text-sm">
+                    <table class="w-full text-right border-collapse border-2 border-black">
+                        <thead>
+                            <tr class="bg-gray-200 font-black text-black">
+                                <th class="border-2 border-black p-3 text-center">التسلسل</th>
+                                <th class="border-2 border-black p-3">اسم الزبون (التفاصيل)</th>
+                                <th class="border-2 border-black p-3">رقم الهاتف</th>
+                                <th class="border-2 border-black p-3">إجمالي الدين</th>
+                                <th class="border-2 border-black p-3">إجمالي المسدد</th>
+                                <th class="border-2 border-black p-3">المبلغ المتبقي</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rows}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            document.getElementById('printableArea').classList.remove('hidden');
+            window.print();
+            document.getElementById('printableArea').classList.add('hidden');
+        };
+    </script>
+</body>
+</html>

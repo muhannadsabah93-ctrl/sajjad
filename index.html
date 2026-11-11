@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts: Cairo -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- SheetJS (XLSX) Library for Advanced Excel Multi-Sheet Support -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     
     <script>
         tailwind.config = {
@@ -29,7 +31,6 @@
     <style>
         body { font-family: 'Cairo', sans-serif; background-color: #0f172a; color: #f8fafc; font-size: 16px; }
         
-        /* High Contrast & Font Customization for Print */
         @media print {
             body * { visibility: hidden; }
             #printableArea, #printableArea * { visibility: visible; }
@@ -149,7 +150,7 @@
                 <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-700 pb-4">
                     <div>
                         <h2 class="text-xl font-black text-white">إدارة وحسابات الزبائن</h2>
-                        <p class="text-sm text-slate-300 font-semibold">إضافة زبون جديد ومتابعة الحساب المالي الإجمالي والديون المتبقية</p>
+                        <p class="text-sm text-slate-300 font-semibold">إضافة زبون جديد ومتابعة المبلغ الكلي، المسدد، والمتبقي لكل زبون</p>
                     </div>
                     <button onclick="openAddCustomerModal()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-base px-5 py-3 rounded-xl flex items-center gap-2 shadow-lg transition">
                         <i class="fa-solid fa-user-plus text-lg"></i> إضافة زبون جديد
@@ -164,8 +165,9 @@
                                 <th class="p-3.5">تاريخ الإنشاء</th>
                                 <th class="p-3.5">رقم الهاتف</th>
                                 <th class="p-3.5">العنوان</th>
-                                <th class="p-3.5">المبلغ الإجمالي</th>
-                                <th class="p-3.5">المتبقي (الديون)</th>
+                                <th class="p-3.5 text-rose-400">المبلغ الكلي</th>
+                                <th class="p-3.5 text-emerald-400">المبلغ المسدد</th>
+                                <th class="p-3.5 text-amber-400">المبلغ المتبقي</th>
                                 <th class="p-3.5">ملاحظات</th>
                                 <th class="p-3.5 text-center">إجراءات</th>
                             </tr>
@@ -175,14 +177,14 @@
                 </div>
             </div>
 
-            <!-- Excel Import/Export Section Box -->
+            <!-- Excel Import/Export Section Box (English Headers & Smart Import) -->
             <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl p-6 shadow-xl space-y-5">
                 <div class="border-b border-slate-700 pb-4 flex items-center justify-between">
                     <div>
                         <h3 class="text-lg font-black text-white flex items-center gap-2">
-                            <i class="fa-solid fa-file-excel text-emerald-400 text-2xl"></i> استيراد وتصدير بيانات الزبائن والديون (Excel / CSV)
+                            <i class="fa-solid fa-file-excel text-emerald-400 text-2xl"></i> النسخ الاحتياطي والاستيراد الذكي (English Headers & Multi-Sheet)
                         </h3>
-                        <p class="text-sm text-slate-300 font-semibold mt-1">تصدير قائمة الزبائن والديون الحالية إلى ملف إكسل أو استيراد بيانات سابقة من ملف إكسل مباشرة</p>
+                        <p class="text-sm text-slate-300 font-semibold mt-1">تصدير إكسل بعناوين إنجليزية وروابط تشعبية، أو استيراد ملفات إكسل يدوية مع جلب حركات الصب والتسديد تلقائياً.</p>
                     </div>
                 </div>
 
@@ -190,17 +192,17 @@
                     <!-- Export Options -->
                     <div class="bg-slate-900 border border-slate-700 p-5 rounded-xl space-y-4">
                         <h4 class="text-base font-black text-amber-400 flex items-center gap-2">
-                            <i class="fa-solid fa-file-export"></i> تصدير البيانات إلى Excel
+                            <i class="fa-solid fa-file-export"></i> تصدير النسخة الاحتياطية (Excel .xlsx)
                         </h4>
                         <p class="text-xs text-slate-300 font-bold leading-relaxed">
-                            قم بتصدير البيانات كاملة إلى ملف CSV مع التوافق التام مع برنامج Microsoft Excel ودعم اللغة العربية (UTF-8 BOM).
+                            يتم إنشاء ملف إكسل بعناوين إنجليزية (`Customer Name`, `Total Amount`, `Remaining Amount`...) وشيتات فرعية مرتبطة بروابط تشعبية لكل زبون.
                         </p>
                         <div class="flex flex-wrap gap-3 pt-2">
-                            <button onclick="exportCustomersToCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm px-4 py-2.5 rounded-xl flex items-center gap-2 transition shadow">
-                                <i class="fa-solid fa-file-csv text-base"></i> تصدير قائمة الزبائن
+                            <button onclick="exportMultiSheetExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm px-5 py-2.5 rounded-xl flex items-center gap-2 transition shadow">
+                                <i class="fa-solid fa-file-excel text-base"></i> تصدير إكسل (عناوين إنجليزية)
                             </button>
                             <button onclick="exportFullDataJSON()" class="bg-slate-700 hover:bg-slate-600 text-slate-100 font-black text-sm px-4 py-2.5 rounded-xl flex items-center gap-2 border border-slate-600 transition shadow">
-                                <i class="fa-solid fa-database text-base"></i> تصدير النسخة الاحتياطية (JSON)
+                                <i class="fa-solid fa-database text-base"></i> نسخة JSON سريعة
                             </button>
                         </div>
                     </div>
@@ -208,15 +210,15 @@
                     <!-- Import Options -->
                     <div class="bg-slate-900 border border-slate-700 p-5 rounded-xl space-y-4">
                         <h4 class="text-base font-black text-amber-400 flex items-center gap-2">
-                            <i class="fa-solid fa-file-import"></i> استيراد البيانات من Excel / CSV
+                            <i class="fa-solid fa-file-import"></i> استيراد ملف إكسل يدوي أو متعدد الشيتات
                         </h4>
                         <p class="text-xs text-slate-300 font-bold leading-relaxed">
-                            اختر ملف Excel/CSV يحتوي على الأعمدة التالية: <span class="text-amber-400">الاسم، الهاتف، العنوان، الملاحظات</span>.
+                            اختر ملف إكسل (`.xlsx`). سيقوم النظام بالبحث الذكي عن أسماء الزبائن، حركات الصب (الديون)، وحركات التسديد وربطها بالكامل بالشيتات والارتباطات.
                         </p>
                         <div class="flex items-center gap-3 pt-1">
-                            <input type="file" id="importExcelInput" accept=".csv, .txt, .json" class="hidden" onchange="handleFileImport(event)">
+                            <input type="file" id="importExcelInput" accept=".xlsx, .xls, .csv, .json" class="hidden" onchange="handleSmartExcelImport(event)">
                             <button onclick="document.getElementById('importExcelInput').click()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-sm px-5 py-2.5 rounded-xl flex items-center gap-2 transition shadow">
-                                <i class="fa-solid fa-upload text-base"></i> اختيار ملف والاستيراد
+                                <i class="fa-solid fa-upload text-base"></i> اختيار ملف إكسل والاستيراد
                             </button>
                             <span id="importFileName" class="text-xs text-slate-400 font-bold truncate">لم يتم اختيار ملف</span>
                         </div>
@@ -252,7 +254,7 @@
 
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <button onclick="openAddDebtModal()" class="bg-rose-600 hover:bg-rose-700 text-white font-black text-base p-4 rounded-xl flex items-center justify-center gap-2 transition shadow-lg">
-                            <i class="fa-solid fa-file-circle-plus text-xl"></i> إضافة دين جديد
+                            <i class="fa-solid fa-file-circle-plus text-xl"></i> إضافة دين / صب جديد
                         </button>
                         <button onclick="openPayDebtModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-base p-4 rounded-xl flex items-center justify-center gap-2 transition shadow-lg">
                             <i class="fa-solid fa-receipt text-xl"></i> تسديد دين وطباعة وصل
@@ -273,7 +275,7 @@
                 <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-700 pb-4">
                     <div>
                         <h2 class="text-xl font-black text-white">سجلات الحسابات والعملاء</h2>
-                        <p class="text-sm text-slate-300 font-semibold">قائمة ملخصة لأسماء الزبائن وإجمالي الديون والتسديدات مع إمكانية استعراض التفاصيل الكاملة والفلترة</p>
+                        <p class="text-sm text-slate-300 font-semibold">قائمة ملخصة تشمل اسم الزبون، رقم الهاتف، العنوان، المبلغ الكلي، المبلغ المسدد، والمبلغ المتبقي</p>
                     </div>
                     <button onclick="printGlobalReport()" class="bg-slate-700 hover:bg-slate-600 text-white font-black px-5 py-3 rounded-xl flex items-center gap-2 border border-slate-600 shadow-lg transition text-base">
                         <i class="fa-solid fa-print text-lg"></i> طباعة كشف عام A4
@@ -285,9 +287,11 @@
                         <thead class="bg-slate-900 text-slate-300 uppercase text-xs font-black">
                             <tr>
                                 <th class="p-4">اسم الزبون</th>
-                                <th class="p-4 text-rose-400">إجمالي الديون</th>
-                                <th class="p-4 text-emerald-400">إجمالي التسديدات</th>
-                                <th class="p-4 text-amber-400">الرصيد المتبقي</th>
+                                <th class="p-4">رقم الهاتف</th>
+                                <th class="p-4">العنوان</th>
+                                <th class="p-4 text-rose-400">المبلغ الكلي</th>
+                                <th class="p-4 text-emerald-400">المبلغ المسدد</th>
+                                <th class="p-4 text-amber-400">المبلغ المتبقي</th>
                                 <th class="p-4 text-center">الإجراءات والعمليات</th>
                             </tr>
                         </thead>
@@ -322,6 +326,16 @@
                     <label class="block text-sm text-slate-300 mb-1">العنوان</label>
                     <input type="text" id="custAddress" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-amber-500">
                 </div>
+                <div id="initialFinancialsContainer" class="grid grid-cols-2 gap-4 bg-slate-900 p-4 rounded-xl border border-slate-700">
+                    <div>
+                        <label class="block text-xs text-rose-400 mb-1">المبلغ الكلي (الدين الأولي) (د.ع)</label>
+                        <input type="number" id="custInitialTotal" min="0" value="0" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-emerald-400 mb-1">المبلغ المسدد (الدفعة) (د.ع)</label>
+                        <input type="number" id="custInitialPaid" min="0" value="0" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-amber-500">
+                    </div>
+                </div>
                 <div>
                     <label class="block text-sm text-slate-300 mb-1">ملاحظات (اختياري)</label>
                     <textarea id="custNotes" rows="2" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-amber-500"></textarea>
@@ -350,9 +364,9 @@
                 <div>
                     <label class="block text-slate-300 mb-1">تصفية حسب نوع الحركة:</label>
                     <select id="detailTypeFilter" onchange="renderCustomerDetailsContent()" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-amber-500">
-                        <option value="all">كافة الحركات (تسديد + ديون)</option>
+                        <option value="all">كافة الحركات (تسديد + صب/ديون)</option>
                         <option value="pay">عمليات التسديد فقط</option>
-                        <option value="debt">عمليات الديون فقط</option>
+                        <option value="debt">عمليات الصب والدين فقط</option>
                         <option value="calls">سجل الاتصالات والاتفاقات فقط</option>
                     </select>
                 </div>
@@ -384,16 +398,16 @@
         </div>
     </div>
 
-    <!-- Add Debt Modal -->
+    <!-- Add Debt / Pouring Modal -->
     <div id="addDebtModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4 no-print">
         <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-                <h3 class="text-xl font-black text-white">إضافة دين جديد</h3>
+                <h3 class="text-xl font-black text-white">إضافة حركة صب / دين جديد</h3>
                 <button onclick="toggleModal('addDebtModal', false)" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
             </div>
             <form onsubmit="handleAddDebt(event)" class="space-y-4 text-base font-bold">
                 <div>
-                    <label class="block text-sm text-slate-300 mb-1">تاريخ الدين</label>
+                    <label class="block text-sm text-slate-300 mb-1">تاريخ العملية</label>
                     <input type="date" id="debtDate" required class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white">
                 </div>
                 <div>
@@ -401,12 +415,12 @@
                     <input type="number" id="debtAmount" min="1" required class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white">
                 </div>
                 <div>
-                    <label class="block text-sm text-slate-300 mb-1">تفاصيل الدين / البيان</label>
-                    <input type="text" id="debtNote" placeholder="مثال: تجهيز خرسانة جاهزة - وجبة 1" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white">
+                    <label class="block text-sm text-slate-300 mb-1">تفاصيل صب الخرسانة / البيان</label>
+                    <input type="text" id="debtNote" placeholder="مثال: وجبة صب أسس - خلاطة رقم 3" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white">
                 </div>
                 <div class="pt-3 flex justify-end gap-3">
                     <button type="button" onclick="toggleModal('addDebtModal', false)" class="px-5 py-2.5 bg-slate-700 text-slate-200 rounded-xl font-bold">إلغاء</button>
-                    <button type="submit" class="px-6 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl shadow-md">إضافة الدين</button>
+                    <button type="submit" class="px-6 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl shadow-md">إضافة عملية الصب</button>
                 </div>
             </form>
         </div>
@@ -430,7 +444,7 @@
                 </div>
                 <div>
                     <label class="block text-sm text-slate-300 mb-1">ملاحظات التسديد</label>
-                    <input type="text" id="payNote" placeholder="مثال: تسديد نقدي / تحويل" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white">
+                    <input type="text" id="payNote" placeholder="مثال: تسديد نقدي / تحويل بنكي" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white">
                 </div>
                 <div class="pt-3 flex justify-end gap-3">
                     <button type="button" onclick="toggleModal('payDebtModal', false)" class="px-5 py-2.5 bg-slate-700 text-slate-200 rounded-xl font-bold">إلغاء</button>
@@ -471,7 +485,7 @@
         </div>
     </div>
 
-    <!-- Printable A4 Container (High Contrast Print View) -->
+    <!-- Printable A4 Container -->
     <div id="printableArea" class="p-8 hidden flex flex-col justify-between min-h-screen">
         <div id="printBody" class="flex-1"></div>
         <div class="mt-4 border-t-2 border-black pt-3 flex justify-between items-center text-sm text-black font-black">
@@ -483,7 +497,7 @@
         </div>
     </div>
 
-    <!-- Firebase SDKs & Application Logic (Modular ES v11/v13) -->
+    <!-- Firebase SDKs & Application Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js";
@@ -660,6 +674,7 @@
             document.getElementById('customerModalTitle').innerText = 'إضافة زبون جديد';
             document.getElementById('editCustId').value = '';
             document.getElementById('customerForm').reset();
+            document.getElementById('initialFinancialsContainer').style.display = 'grid';
             window.toggleModal('customerModal', true);
         };
 
@@ -667,12 +682,13 @@
             const cust = window.customers.find(c => c.id === custID);
             if (!cust) return;
 
-            document.getElementById('customerModalTitle').innerText = 'تعديل بيانات الزبون';
+            document.getElementById('customerModalTitle').innerText = 'تعديل بيانات الزبون الأساسية';
             document.getElementById('editCustId').value = cust.id;
             document.getElementById('custName').value = cust.name;
             document.getElementById('custPhone').value = cust.phone;
             document.getElementById('custAddress').value = cust.address || '';
             document.getElementById('custNotes').value = cust.notes || '';
+            document.getElementById('initialFinancialsContainer').style.display = 'none';
             window.toggleModal('customerModal', true);
         };
 
@@ -690,14 +706,41 @@
                     .catch(err => alert('خطأ: ' + err.message));
             } else {
                 const newId = 'CUST_' + Date.now();
+                const todayStr = new Date().toISOString().split('T')[0];
                 const newCust = {
                     id: newId,
                     name, phone, address, notes,
-                    createdAt: new Date().toISOString().split('T')[0]
+                    createdAt: todayStr
                 };
-                set(ref(db, 'qaleb_debts/customers/' + newId), newCust)
-                    .then(() => window.toggleModal('customerModal', false))
-                    .catch(err => alert('خطأ: ' + err.message));
+
+                const initialTotal = Number(document.getElementById('custInitialTotal').value) || 0;
+                const initialPaid = Number(document.getElementById('custInitialPaid').value) || 0;
+
+                set(ref(db, 'qaleb_debts/customers/' + newId), newCust).then(() => {
+                    if (initialTotal > 0) {
+                        const debtTrxId = 'TRX_INIT_DEBT_' + Date.now();
+                        set(ref(db, 'qaleb_debts/transactions/' + debtTrxId), {
+                            id: debtTrxId,
+                            customerId: newId,
+                            type: 'debt',
+                            date: todayStr,
+                            amount: initialTotal,
+                            note: 'رصيد صب/دين ابتدائي'
+                        });
+                    }
+                    if (initialPaid > 0) {
+                        const payTrxId = 'TRX_INIT_PAY_' + Date.now();
+                        set(ref(db, 'qaleb_debts/transactions/' + payTrxId), {
+                            id: payTrxId,
+                            customerId: newId,
+                            type: 'pay',
+                            date: todayStr,
+                            amount: initialPaid,
+                            note: 'دفعة تسديد أولية'
+                        });
+                    }
+                    window.toggleModal('customerModal', false);
+                }).catch(err => alert('خطأ: ' + err.message));
             }
         };
 
@@ -713,7 +756,7 @@
                 return;
             }
 
-            if (confirm(`هل أنت متأكد من حذف الزبون (${cust.name}) وكافة ديونه وسجلاته نهائياً من قاعدة البيانات؟`)) {
+            if (confirm(`هل أنت متأكد من حذف الزبون (${cust.name}) وكافة ديونه وسجلاته نهائياً؟`)) {
                 remove(ref(db, 'qaleb_debts/customers/' + custID));
                 window.transactions.forEach(t => {
                     if (t.customerId === custID) remove(ref(db, 'qaleb_debts/transactions/' + t.id));
@@ -730,7 +773,7 @@
             tbody.innerHTML = '';
 
             if (window.customers.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="text-center text-slate-400 py-8 font-bold text-base">لا يوجد زبائن مضافون حتى الآن.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center text-slate-400 py-8 font-bold text-base">لا يوجد زبائن مضافون حتى الآن.</td></tr>`;
                 return;
             }
 
@@ -746,13 +789,17 @@
                         <td class="p-3.5 text-slate-300 font-bold text-xs">${cust.createdAt}</td>
                         <td class="p-3.5 text-amber-300 font-mono font-bold text-sm">${cust.phone}</td>
                         <td class="p-3.5 text-slate-300 font-bold">${cust.address || '-'}</td>
-                        <td class="p-3.5 font-black text-slate-100">${window.formatCurr(debtSum)}</td>
-                        <td class="p-3.5 font-black text-base ${remaining > 0 ? 'text-rose-400' : 'text-emerald-400'}">${window.formatCurr(remaining)}</td>
+                        <td class="p-3.5 font-black text-rose-400">${window.formatCurr(debtSum)}</td>
+                        <td class="p-3.5 font-black text-emerald-400">${window.formatCurr(paySum)}</td>
+                        <td class="p-3.5 font-black text-base ${remaining > 0 ? 'text-amber-400' : 'text-slate-300'}">${window.formatCurr(remaining)}</td>
                         <td class="p-3.5 text-slate-300 text-xs font-bold max-w-xs truncate">${cust.notes || '-'}</td>
                         <td class="p-3.5 text-center">
                             <div class="flex items-center justify-center gap-2">
                                 <button onclick="selectCustomerForAction('${cust.id}')" class="bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 border border-amber-500/50 px-3 py-1.5 rounded-lg text-xs font-black transition">
                                     إدارة
+                                </button>
+                                <button onclick="openEditCustomerModal('${cust.id}')" class="bg-sky-500/20 hover:bg-sky-500/40 text-sky-300 border border-sky-500/50 px-3 py-1.5 rounded-lg text-xs font-black transition">
+                                    تعديل
                                 </button>
                                 <button onclick="deleteCustomer('${cust.id}')" class="bg-rose-600/20 hover:bg-rose-600/40 text-rose-300 border border-rose-500/50 px-3 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1">
                                     <i class="fa-solid fa-trash-can"></i> حذف
@@ -764,40 +811,87 @@
             });
         }
 
-        // ================= Tab 2: Export & Import =================
-        window.exportCustomersToCSV = function() {
+        // ================= Advanced Multi-Sheet Export (English Headers) =================
+        window.exportMultiSheetExcel = function() {
             if (window.customers.length === 0) {
                 alert('لا توجد بيانات زبائن لتصديرها.');
                 return;
             }
 
-            let csvContent = "\uFEFF";
-            csvContent += "اسم الزبون,رقم الهاتف,العنوان,تاريخ الإنشاء,إجمالي الديون (د.ع),إجمالي المسدد (د.ع),الرصيد المتبقي (د.ع),ملاحظات\n";
+            const wb = XLSX.utils.book_new();
 
-            window.customers.forEach(cust => {
+            const mainRows = [
+                ["Al-Qaleb Concrete Factory - Main Customer Debt List"],
+                ["Export Date:", new Date().toISOString().split('T')[0], "", "", "", "", "", ""],
+                [],
+                ["No.", "Customer Name", "Phone Number", "Address", "Total Amount (IQD)", "Paid Amount (IQD)", "Remaining Amount (IQD)", "Customer Sheet Link"]
+            ];
+
+            window.customers.forEach((cust, idx) => {
                 const custTrans = window.transactions.filter(t => t.customerId === cust.id);
                 const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
                 const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
                 const remaining = debtSum - paySum;
 
-                const name = `"${(cust.name || '').replace(/"/g, '""')}"`;
-                const phone = `"${(cust.phone || '').replace(/"/g, '""')}"`;
-                const address = `"${(cust.address || '').replace(/"/g, '""')}"`;
-                const created = `"${cust.createdAt || ''}"`;
-                const notes = `"${(cust.notes || '').replace(/"/g, '""')}"`;
+                const safeSheetName = (cust.name || `Customer_${idx+1}`).replace(/[\\\/\?\*\[\]\:]/g, '_').substring(0, 30);
+                const hyperlinkFormula = `=HYPERLINK("#'${safeSheetName}'!A1", "Open Sheet")`;
 
-                csvContent += `${name},${phone},${address},${created},${debtSum},${paySum},${remaining},${notes}\n`;
+                mainRows.push([
+                    idx + 1,
+                    cust.name,
+                    cust.phone,
+                    cust.address || '-',
+                    debtSum,
+                    paySum,
+                    remaining,
+                    { t: 's', v: hyperlinkFormula, l: { Target: `#'${safeSheetName}'!A1`, Tooltip: `Go to ${cust.name}` } }
+                ]);
             });
 
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            const url = URL.createObjectURL(blob);
+            const wsMain = XLSX.utils.aoa_to_sheet(mainRows);
+            XLSX.utils.book_append_sheet(wb, wsMain, "Main List");
+
+            window.customers.forEach((cust, idx) => {
+                const safeSheetName = (cust.name || `Customer_${idx+1}`).replace(/[\\\/\?\*\[\]\:]/g, '_').substring(0, 30);
+                const custTrans = window.transactions.filter(t => t.customerId === cust.id).sort((a,b) => new Date(a.date) - new Date(b.date));
+                const custCalls = window.calls.filter(c => c.customerId === cust.id);
+
+                const subRows = [
+                    [`Customer Statement: ${cust.name}`],
+                    [`Phone: ${cust.phone}`, `Address: ${cust.address || 'N/A'}`, `Notes: ${cust.notes || 'None'}`],
+                    [],
+                    ["Financial Transactions (Pouring & Payments):"],
+                    ["No.", "Transaction Date", "Transaction Type", "Description / Note", "Amount (IQD)"]
+                ];
+
+                custTrans.forEach((t, tIdx) => {
+                    subRows.push([
+                        tIdx + 1,
+                        t.date,
+                        t.type === 'debt' ? 'Pouring / Debt (+)' : 'Payment (-)',
+                        t.note || '-',
+                        t.amount
+                    ]);
+                });
+
+                subRows.push([]);
+                subRows.push(["Calls and Appointments Log:"]);
+                subRows.push(["Call Date", "Agreed Target Date", "Notes / Result"]);
+
+                if (custCalls.length === 0) {
+                    subRows.push(["No calls recorded", "-", "-"]);
+                } else {
+                    custCalls.forEach(call => {
+                        subRows.push([call.date, call.targetDate || 'N/A', call.note]);
+                    });
+                }
+
+                const wsSub = XLSX.utils.aoa_to_sheet(subRows);
+                XLSX.utils.book_append_sheet(wb, wsSub, safeSheetName);
+            });
+
             const todayStr = new Date().toISOString().split('T')[0];
-            link.setAttribute("href", url);
-            link.setAttribute("download", `قائمة_زبائن_معامل_القالب_${todayStr}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            XLSX.writeFile(wb, `AlQaleb_MultiSheet_Backup_${todayStr}.xlsx`);
         };
 
         window.exportFullDataJSON = function() {
@@ -808,59 +902,115 @@
             const url = URL.createObjectURL(blob);
             const todayStr = new Date().toISOString().split('T')[0];
             link.setAttribute("href", url);
-            link.setAttribute("download", `نسخة_احتياطية_معامل_القالب_${todayStr}.json`);
+            link.setAttribute("download", `AlQaleb_Backup_${todayStr}.json`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         };
 
-        window.handleFileImport = function(event) {
+        // Smart Flexible Excel Import (Handles manual files & multi-sheets without automatic notes)
+        window.handleSmartExcelImport = function(event) {
             const file = event.target.files[0];
             if (!file) return;
 
             document.getElementById('importFileName').innerText = file.name;
             const reader = new FileReader();
-            reader.onload = function(e) {
-                const content = e.target.result;
-                if (file.name.endsWith('.json')) {
+
+            if (file.name.endsWith('.json')) {
+                reader.onload = function(e) {
                     try {
-                        const parsed = JSON.parse(content);
+                        const parsed = JSON.parse(e.target.result);
                         if (parsed.customers && Array.isArray(parsed.customers)) {
-                            if (confirm(`هل تريد رفع ودمج ${parsed.customers.length} زبون إلى قاعدة البيانات؟`)) {
+                            if (confirm(`هل تريد استيراد ودمج ${parsed.customers.length} زبون؟`)) {
                                 parsed.customers.forEach(c => set(ref(db, 'qaleb_debts/customers/' + c.id), c));
                                 if (parsed.transactions) parsed.transactions.forEach(t => set(ref(db, 'qaleb_debts/transactions/' + t.id), t));
                                 if (parsed.calls) parsed.calls.forEach(cl => set(ref(db, 'qaleb_debts/calls/' + cl.id), cl));
-                                alert('تم استيراد البيانات إلى Firebase بنجاح!');
+                                alert('تم استيراد بيانات JSON بنجاح!');
                             }
                         }
                     } catch(err) {
                         alert('خطأ في قراءة ملف JSON.');
                     }
-                } else {
-                    const lines = content.split(/\r\n|\n/);
-                    let addedCount = 0;
-                    lines.forEach((line, index) => {
-                        if (index === 0 || !line.trim()) return;
-                        const cols = line.split(/,(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)/).map(c => c.replace(/^"|"$/g, '').trim());
-                        if (cols.length >= 2 && cols[0]) {
-                            const name = cols[0];
-                            const phone = cols[1] || '';
-                            const address = cols[2] || '';
-                            const notes = cols[7] || cols[3] || '';
+                };
+                reader.readAsText(file, 'UTF-8');
+            } else {
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
 
-                            const exists = window.customers.some(c => c.phone === phone && c.name === name);
-                            if (!exists) {
-                                const newId = 'CUST_' + (Date.now() + index);
-                                const newCust = { id: newId, name, phone, address, notes, createdAt: new Date().toISOString().split('T')[0] };
-                                set(ref(db, 'qaleb_debts/customers/' + newId), newCust);
-                                addedCount++;
-                            }
-                        }
-                    });
-                    alert(`تم رفع واستيراد ${addedCount} زبون جديد بنجاح!`);
-                }
-            };
-            reader.readAsText(file, 'UTF-8');
+                        let importedCustomersCount = 0;
+                        let importedTransactionsCount = 0;
+                        const todayStr = new Date().toISOString().split('T')[0];
+
+                        workbook.SheetNames.forEach(sheetName => {
+                            if (sheetName === "Main List" || sheetName === "القائمة الرئيسية" || sheetName === "الملخص") return;
+
+                            const worksheet = workbook.Sheets[sheetName];
+                            const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                            const customerName = sheetName.trim();
+                            if (!customerName) return;
+
+                            const customerId = 'CUST_IMP_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+                            
+                            const newCust = {
+                                id: customerId,
+                                name: customerName,
+                                phone: '07800000000',
+                                address: 'مستورد من إكسل',
+                                notes: '', // Clean notes without automated tags
+                                createdAt: todayStr
+                            };
+                            set(ref(db, 'qaleb_debts/customers/' + customerId), newCust);
+                            importedCustomersCount++;
+
+                            rows.forEach((row, rIdx) => {
+                                if (row && row.length > 0) {
+                                    let foundAmount = 0;
+                                    let foundNote = 'حركة صب / دين';
+                                    let trxType = 'debt'; // default pouring/debt
+
+                                    row.forEach(cell => {
+                                        const cellStr = String(cell || '').trim();
+                                        const lowerCell = cellStr.toLowerCase();
+                                        
+                                        if (lowerCell.includes('تسديد') || lowerCell.includes('pay') || lowerCell.includes('قبض')) {
+                                            trxType = 'pay';
+                                        }
+
+                                        const num = Number(cellStr.replace(/,/g, ''));
+                                        if (!isNaN(num) && num > 100 && foundAmount === 0) {
+                                            foundAmount = num;
+                                        } else if (cellStr.length > 3 && !cellStr.match(/^\d+$/)) {
+                                            foundNote = cellStr;
+                                        }
+                                    });
+
+                                    if (foundAmount > 0) {
+                                        const trxId = 'TRX_SMART_' + Date.now() + '_' + rIdx + Math.floor(Math.random() * 1000);
+                                        const newTrx = {
+                                            id: trxId,
+                                            customerId: customerId,
+                                            type: trxType,
+                                            date: todayStr,
+                                            amount: foundAmount,
+                                            note: foundNote
+                                        };
+                                        set(ref(db, 'qaleb_debts/transactions/' + trxId), newTrx);
+                                        importedTransactionsCount++;
+                                    }
+                                }
+                            });
+                        });
+
+                        alert(`تم الاستيراد الذكي بنجاح!\n- عدد الزبائن: ${importedCustomersCount}\n- عدد حركات الصب والتسديد: ${importedTransactionsCount}`);
+                    } catch(err) {
+                        alert('حدث خطأ أثناء قراءة الملف: ' + err.message);
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            }
         };
 
         // ================= Tab 3: Actions =================
@@ -902,7 +1052,7 @@
 
             document.getElementById('actionCustName').innerText = cust.name;
             document.getElementById('actionCustPhone').innerText = `رقم الهاتف: ${cust.phone} | العنوان: ${cust.address || 'غير محدد'}`;
-            document.getElementById('actionCustTotal').innerText = `إجمالي الديون: ` + window.formatCurr(debtSum);
+            document.getElementById('actionCustTotal').innerText = `إجمالي الصب/الديون: ` + window.formatCurr(debtSum);
             document.getElementById('actionCustRemaining').innerText = `المتبقي: ` + window.formatCurr(remaining);
         };
 
@@ -969,7 +1119,7 @@
             tbody.innerHTML = '';
 
             if (window.customers.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-slate-400 py-8 font-bold text-base">لا توجد سجلات زبائن مسجلة.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-slate-400 py-8 font-bold text-base">لا توجد سجلات زبائن مسجلة.</td></tr>`;
                 return;
             }
 
@@ -982,6 +1132,8 @@
                 tbody.innerHTML += `
                     <tr class="hover:bg-slate-700/40">
                         <td class="p-4 font-black text-white text-lg">${cust.name}</td>
+                        <td class="p-4 font-mono font-bold text-amber-300">${cust.phone}</td>
+                        <td class="p-4 font-bold text-slate-300">${cust.address || '-'}</td>
                         <td class="p-4 font-black text-rose-400 text-base">${window.formatCurr(debtSum)}</td>
                         <td class="p-4 font-black text-emerald-400 text-base">${window.formatCurr(paySum)}</td>
                         <td class="p-4 font-black ${remaining > 0 ? 'text-amber-400' : 'text-slate-300'} text-base">${window.formatCurr(remaining)}</td>
@@ -1072,8 +1224,8 @@
 
             let htmlContent = `
                 <div class="flex flex-wrap justify-between items-center bg-slate-900 p-4 rounded-xl border border-slate-700 text-sm font-black gap-2 shadow-inner">
-                    <span class="text-slate-200">إجمالي الديون التراكمية: <b class="text-rose-400 text-base">${window.formatCurr(totalDebt)}</b></span>
-                    <span class="text-slate-200">إجمالي المقبوضات/التسديدات: <b class="text-emerald-400 text-base">${window.formatCurr(totalPay)}</b></span>
+                    <span class="text-slate-200">إجمالي عمليات الصب والديون: <b class="text-rose-400 text-base">${window.formatCurr(totalDebt)}</b></span>
+                    <span class="text-slate-200">إجمالي عمليات التسديد: <b class="text-emerald-400 text-base">${window.formatCurr(totalPay)}</b></span>
                     <span class="text-slate-200">الرصيد المتبقي الإجمالي: <b class="${overallRemaining > 0 ? 'text-amber-400' : 'text-slate-300'} text-base">${window.formatCurr(overallRemaining)}</b></span>
                 </div>
             `;
@@ -1081,7 +1233,7 @@
             if (typeFilter !== 'calls') {
                 htmlContent += `
                     <div>
-                        <h4 class="text-sm font-black text-amber-400 mb-2 uppercase">جدول الحركة المالية التفصيلي:</h4>
+                        <h4 class="text-sm font-black text-amber-400 mb-2 uppercase">جدول الحركات التفصيلية (صب وتسديد):</h4>
                         <div class="overflow-x-auto">
                             <table class="w-full text-right text-sm text-slate-100 border border-slate-700">
                                 <thead class="bg-slate-900 text-slate-300 font-black">
@@ -1102,7 +1254,7 @@
                                             <td class="p-3 font-black text-slate-400">${idx + 1}</td>
                                             <td class="p-3 font-mono font-bold">${t.date}</td>
                                             <td class="p-3 font-black ${t.type === 'debt' ? 'text-rose-400' : 'text-emerald-400'}">
-                                                ${t.type === 'debt' ? 'إضافة دين (+)' : 'استلام مبلغ (-)'}
+                                                ${t.type === 'debt' ? 'عملية صب / دين (+)' : 'عملية تسديد (-)'}
                                             </td>
                                             <td class="p-3 text-slate-200 font-semibold">${t.note || '-'}</td>
                                             <td class="p-3 font-black text-white">${window.formatCurr(t.amount)}</td>
@@ -1182,7 +1334,7 @@
 
             document.getElementById('printSignCustomer').innerText = `توقيع الزبون (${cust.name}): ....................................`;
 
-            const docType = trx.type === 'pay' ? 'وصل تسديد ومقبوضات' : 'وصل إضافة دين جديد';
+            const docType = trx.type === 'pay' ? 'وصل تسديد ومقبوضات' : 'وصل عملية صب / دين';
             const printBody = document.getElementById('printBody');
 
             printBody.innerHTML = `
@@ -1204,7 +1356,7 @@
                                 <td class="border-2 border-black p-3.5 text-center">1</td>
                                 <td class="border-2 border-black p-3.5">${trx.note || docType}</td>
                                 <td class="border-2 border-black p-3.5">
-                                    ${trx.type === 'debt' ? 'إضافة دين (+)' : 'استلام مبلغ (-)'}
+                                    ${trx.type === 'debt' ? 'عملية صب / دين (+)' : 'عملية تسديد (-)'}
                                 </td>
                                 <td class="border-2 border-black p-3.5">${window.formatCurr(trx.amount)}</td>
                                 <td class="border-2 border-black p-3.5 font-black">${window.formatCurr(currentBalAtTrx)}</td>
@@ -1271,7 +1423,7 @@
 
             let docTypeTitle = 'كشف حساب تفصيلي كامل';
             if (typeFilter === 'pay') docTypeTitle = 'كشف عمليات التسديد والمقبوضات';
-            if (typeFilter === 'debt') docTypeTitle = 'كشف عمليات الديون المسجلة';
+            if (typeFilter === 'debt') docTypeTitle = 'كشف عمليات الصب والديون';
 
             const printBody = document.getElementById('printBody');
             printBody.innerHTML = `
@@ -1294,7 +1446,7 @@
                                     <td class="border-2 border-black p-3 text-center font-black">${i + 1}</td>
                                     <td class="border-2 border-black p-3 font-mono">${t.date}</td>
                                     <td class="border-2 border-black p-3">${t.note || '-'}</td>
-                                    <td class="border-2 border-black p-3 font-black">${t.type === 'debt' ? 'إضافة دين (+)' : 'تسديد مبلغ (-)'}</td>
+                                    <td class="border-2 border-black p-3 font-black">${t.type === 'debt' ? 'عملية صب / دين (+)' : 'عملية تسديد (-)'}</td>
                                     <td class="border-2 border-black p-3 font-black">${window.formatCurr(t.amount)}</td>
                                     <td class="border-2 border-black p-3 font-black">${window.formatCurr(balanceMap[t.id])}</td>
                                 </tr>
@@ -1303,7 +1455,7 @@
                     </table>
 
                     <div class="flex justify-between items-center bg-gray-100 p-4 rounded-lg border-2 border-black text-sm font-black mt-4">
-                        <p>مجموع الديون: ${window.formatCurr(totalDebt)}</p>
+                        <p>مجموع الصب/الديون: ${window.formatCurr(totalDebt)}</p>
                         <p>مجموع المسدد: ${window.formatCurr(totalPay)}</p>
                         <p class="text-base text-black underline">إجمالي الرصيد المتبقي الحالي: ${window.formatCurr(remaining)}</p>
                     </div>
@@ -1332,6 +1484,7 @@
                         <td class="border-2 border-black p-3 text-center font-black">${i + 1}</td>
                         <td class="border-2 border-black p-3 font-black text-base">${cust.name}</td>
                         <td class="border-2 border-black p-3 font-mono">${cust.phone}</td>
+                        <td class="border-2 border-black p-3">${cust.address || '-'}</td>
                         <td class="border-2 border-black p-3">${window.formatCurr(debtSum)}</td>
                         <td class="border-2 border-black p-3">${window.formatCurr(paySum)}</td>
                         <td class="border-2 border-black p-3 font-black">${window.formatCurr(remaining)}</td>
@@ -1350,10 +1503,11 @@
                         <thead>
                             <tr class="bg-gray-200 font-black text-black">
                                 <th class="border-2 border-black p-3 text-center">التسلسل</th>
-                                <th class="border-2 border-black p-3">اسم الزبون (التفاصيل)</th>
+                                <th class="border-2 border-black p-3">اسم الزبون</th>
                                 <th class="border-2 border-black p-3">رقم الهاتف</th>
-                                <th class="border-2 border-black p-3">إجمالي الدين</th>
-                                <th class="border-2 border-black p-3">إجمالي المسدد</th>
+                                <th class="border-2 border-black p-3">العنوان</th>
+                                <th class="border-2 border-black p-3">المبلغ الكلي</th>
+                                <th class="border-2 border-black p-3">المبلغ المسدد</th>
                                 <th class="border-2 border-black p-3">المبلغ المتبقي</th>
                             </tr>
                         </thead>

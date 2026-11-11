@@ -177,14 +177,14 @@
                 </div>
             </div>
 
-            <!-- Excel Import/Export Section Box (Single Sheet Optimized) -->
+            <!-- Excel Import/Export Section Box -->
             <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl p-6 shadow-xl space-y-5">
                 <div class="border-b border-slate-700 pb-4 flex items-center justify-between">
                     <div>
                         <h3 class="text-lg font-black text-white flex items-center gap-2">
                             <i class="fa-solid fa-file-excel text-emerald-400 text-2xl"></i> النسخ الاحتياطي والاستيراد (شيت واحد منظم - Single Sheet)
                         </h3>
-                        <p class="text-sm text-slate-300 font-semibold mt-1">تصدير واستيراد البيانات بملف إكسل واحد سريع وخفيف بدون تعقيد الشيتات المتعددة لتفادي بطء المتصفح.</p>
+                        <p class="text-sm text-slate-300 font-semibold mt-1">تصدير واستيراد البيانات بملف إكسل واحد سريع وخفيف لتفادي بطء المتصفح.</p>
                     </div>
                 </div>
 
@@ -213,7 +213,7 @@
                             <i class="fa-solid fa-file-import"></i> استيراد ملف إكسل أو JSON
                         </h4>
                         <p class="text-xs text-slate-300 font-bold leading-relaxed">
-                            اختر ملف النسخة الاحتياطية لاستعادة البيانات بشكل فوري وسريع دون أي تجمد أو ثقل في الواجهة.
+                            اختر ملف النسخة الاحتياطية لاستعادة البيانات بشكل فوري وسريع دون أي تجمد في الواجهة.
                         </p>
                         <div class="flex items-center gap-3 pt-1">
                             <input type="file" id="importExcelInput" accept=".xlsx, .xls, .csv, .json" class="hidden" onchange="handleSingleSheetExcelImport(event)">
@@ -326,6 +326,8 @@
                     <label class="block text-sm text-slate-300 mb-1">العنوان</label>
                     <input type="text" id="custAddress" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-amber-500">
                 </div>
+                
+                <!-- Initial Financials (Only shown when adding new customer) -->
                 <div id="initialFinancialsContainer" class="grid grid-cols-2 gap-4 bg-slate-900 p-4 rounded-xl border border-slate-700">
                     <div>
                         <label class="block text-xs text-rose-400 mb-1">المبلغ الكلي (الدين الأولي) (د.ع)</label>
@@ -336,6 +338,23 @@
                         <input type="number" id="custInitialPaid" min="0" value="0" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-amber-500">
                     </div>
                 </div>
+
+                <!-- Editable Financials (Only shown when editing existing customer) -->
+                <div id="editFinancialsContainer" class="hidden grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-900 p-4 rounded-xl border border-slate-700 text-sm">
+                    <div>
+                        <label class="block text-xs text-rose-400 mb-1">المبلغ الكلي (د.ع)</label>
+                        <input type="number" id="editTotalAmount" min="0" oninput="calculateEditRemaining()" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-amber-500 font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-emerald-400 mb-1">المبلغ المسدد (د.ع)</label>
+                        <input type="number" id="editPaidAmount" min="0" oninput="calculateEditRemaining()" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-amber-500 font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-amber-400 mb-1">المبلغ المتبقي (تلقائي)</label>
+                        <input type="text" id="editRemainingAmount" disabled class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-amber-400 font-black cursor-not-allowed">
+                    </div>
+                </div>
+
                 <div>
                     <label class="block text-sm text-slate-300 mb-1">ملاحظات (اختياري)</label>
                     <textarea id="custNotes" rows="2" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-amber-500"></textarea>
@@ -554,7 +573,6 @@
             });
         }
 
-        // Throttle UI updates to prevent lagging and freezing when data updates frequently
         function scheduleUIRefresh() {
             if (isUIUpdating) return;
             isUIUpdating = true;
@@ -687,6 +705,7 @@
             document.getElementById('editCustId').value = '';
             document.getElementById('customerForm').reset();
             document.getElementById('initialFinancialsContainer').style.display = 'grid';
+            document.getElementById('editFinancialsContainer').classList.add('hidden');
             window.toggleModal('customerModal', true);
         };
 
@@ -694,14 +713,34 @@
             const cust = window.customers.find(c => c.id === custID);
             if (!cust) return;
 
-            document.getElementById('customerModalTitle').innerText = 'تعديل بيانات الزبون الأساسية';
+            document.getElementById('customerModalTitle').innerText = 'تعديل بيانات الزبون الحسابية والأساسية';
             document.getElementById('editCustId').value = cust.id;
             document.getElementById('custName').value = cust.name;
             document.getElementById('custPhone').value = cust.phone;
             document.getElementById('custAddress').value = cust.address || '';
             document.getElementById('custNotes').value = cust.notes || '';
+            
+            // Hide initial input box, show editable financial box when editing
             document.getElementById('initialFinancialsContainer').style.display = 'none';
+            document.getElementById('editFinancialsContainer').classList.remove('hidden');
+
+            // Calculate current customer totals from transactions
+            const custTrans = window.transactions.filter(t => t.customerId === cust.id);
+            const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
+            const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
+
+            document.getElementById('editTotalAmount').value = debtSum;
+            document.getElementById('editPaidAmount').value = paySum;
+            window.calculateEditRemaining();
+
             window.toggleModal('customerModal', true);
+        };
+
+        window.calculateEditRemaining = function() {
+            const total = Number(document.getElementById('editTotalAmount').value) || 0;
+            const paid = Number(document.getElementById('editPaidAmount').value) || 0;
+            const remaining = total - paid;
+            document.getElementById('editRemainingAmount').value = window.formatCurr(remaining);
         };
 
         window.handleSaveCustomer = function(e) {
@@ -713,8 +752,47 @@
             const notes = document.getElementById('custNotes').value.trim();
 
             if (editId) {
+                // Update basic info
                 update(ref(db, 'qaleb_debts/customers/' + editId), { name, phone, address, notes })
-                    .then(() => window.toggleModal('customerModal', false))
+                    .then(() => {
+                        // If editing financials, update or create adjustment transactions
+                        const newTotal = Number(document.getElementById('editTotalAmount').value) || 0;
+                        const newPaid = Number(document.getElementById('editPaidAmount').value) || 0;
+                        
+                        const custTrans = window.transactions.filter(t => t.customerId === editId);
+                        const oldDebtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
+                        const oldPaySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
+
+                        const todayStr = new Date().toISOString().split('T')[0];
+
+                        if (newTotal !== oldDebtSum) {
+                            const diffDebt = newTotal - oldDebtSum;
+                            const trxId = 'TRX_ADJ_DEBT_' + Date.now();
+                            set(ref(db, 'qaleb_debts/transactions/' + trxId), {
+                                id: trxId,
+                                customerId: editId,
+                                type: 'debt',
+                                date: todayStr,
+                                amount: diffDebt,
+                                note: 'تسوية وتعديل المبلغ الكلي يدويأ'
+                            });
+                        }
+
+                        if (newPaid !== oldPaySum) {
+                            const diffPay = newPaid - oldPaySum;
+                            const trxId = 'TRX_ADJ_PAY_' + Date.now();
+                            set(ref(db, 'qaleb_debts/transactions/' + trxId), {
+                                id: trxId,
+                                customerId: editId,
+                                type: 'pay',
+                                date: todayStr,
+                                amount: diffPay,
+                                note: 'تسوية وتعديل المبلغ المسدد يدويأ'
+                            });
+                        }
+
+                        window.toggleModal('customerModal', false);
+                    })
                     .catch(err => alert('خطأ: ' + err.message));
             } else {
                 const newId = 'CUST_' + Date.now();
@@ -916,7 +994,6 @@
                         let importedCount = 0;
                         const todayStr = new Date().toISOString().split('T')[0];
 
-                        // Skip header rows and parse data rows
                         for (let i = 4; i < rows.length; i++) {
                             const row = rows[i];
                             if (row && row.length >= 2 && row[1]) {
@@ -968,7 +1045,7 @@
                             }
                         }
 
-                        alert(`تم استيراد ${importedCount} زبون بنجاح من ملف الإكسل بدون أي ثقل أو شيتات متعددة.`);
+                        alert(`تم استيراد ${importedCount} زبون بنجاح من ملف الإكسل.`);
                     } catch(err) {
                         alert('حدث خطأ أثناء قراءة ملف الإكسل: ' + err.message);
                     }

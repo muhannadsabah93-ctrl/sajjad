@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts: Cairo -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-    <!-- SheetJS (XLSX) Library for Advanced Excel Multi-Sheet Support -->
+    <!-- SheetJS (XLSX) Library -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     
     <script>
@@ -177,14 +177,14 @@
                 </div>
             </div>
 
-            <!-- Excel Import/Export Section Box (English Headers & Smart Import) -->
+            <!-- Excel Import/Export Section Box (Single Sheet Optimized) -->
             <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl p-6 shadow-xl space-y-5">
                 <div class="border-b border-slate-700 pb-4 flex items-center justify-between">
                     <div>
                         <h3 class="text-lg font-black text-white flex items-center gap-2">
-                            <i class="fa-solid fa-file-excel text-emerald-400 text-2xl"></i> النسخ الاحتياطي والاستيراد الذكي (English Headers & Multi-Sheet)
+                            <i class="fa-solid fa-file-excel text-emerald-400 text-2xl"></i> النسخ الاحتياطي والاستيراد (شيت واحد منظم - Single Sheet)
                         </h3>
-                        <p class="text-sm text-slate-300 font-semibold mt-1">تصدير إكسل بعناوين إنجليزية وروابط تشعبية، أو استيراد ملفات إكسل يدوية مع جلب حركات الصب والتسديد تلقائياً.</p>
+                        <p class="text-sm text-slate-300 font-semibold mt-1">تصدير واستيراد البيانات بملف إكسل واحد سريع وخفيف بدون تعقيد الشيتات المتعددة لتفادي بطء المتصفح.</p>
                     </div>
                 </div>
 
@@ -195,11 +195,11 @@
                             <i class="fa-solid fa-file-export"></i> تصدير النسخة الاحتياطية (Excel .xlsx)
                         </h4>
                         <p class="text-xs text-slate-300 font-bold leading-relaxed">
-                            يتم إنشاء ملف إكسل بعناوين إنجليزية (`Customer Name`, `Total Amount`, `Remaining Amount`...) وشيتات فرعية مرتبطة بروابط تشعبية لكل زبون.
+                            تصدير كافة الزبائن والديون والحركات في جدول شيت واحد منظم بعناوين إنجليزية لضمان سرعة الفتح والتصفح.
                         </p>
                         <div class="flex flex-wrap gap-3 pt-2">
-                            <button onclick="exportMultiSheetExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm px-5 py-2.5 rounded-xl flex items-center gap-2 transition shadow">
-                                <i class="fa-solid fa-file-excel text-base"></i> تصدير إكسل (عناوين إنجليزية)
+                            <button onclick="exportSingleSheetExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm px-5 py-2.5 rounded-xl flex items-center gap-2 transition shadow">
+                                <i class="fa-solid fa-file-excel text-base"></i> تصدير إكسل (شيت واحد)
                             </button>
                             <button onclick="exportFullDataJSON()" class="bg-slate-700 hover:bg-slate-600 text-slate-100 font-black text-sm px-4 py-2.5 rounded-xl flex items-center gap-2 border border-slate-600 transition shadow">
                                 <i class="fa-solid fa-database text-base"></i> نسخة JSON سريعة
@@ -210,15 +210,15 @@
                     <!-- Import Options -->
                     <div class="bg-slate-900 border border-slate-700 p-5 rounded-xl space-y-4">
                         <h4 class="text-base font-black text-amber-400 flex items-center gap-2">
-                            <i class="fa-solid fa-file-import"></i> استيراد ملف إكسل يدوي أو متعدد الشيتات
+                            <i class="fa-solid fa-file-import"></i> استيراد ملف إكسل أو JSON
                         </h4>
                         <p class="text-xs text-slate-300 font-bold leading-relaxed">
-                            اختر ملف إكسل (`.xlsx`). سيقوم النظام بالبحث الذكي عن أسماء الزبائن، حركات الصب (الديون)، وحركات التسديد وربطها بالكامل بالشيتات والارتباطات.
+                            اختر ملف النسخة الاحتياطية لاستعادة البيانات بشكل فوري وسريع دون أي تجمد أو ثقل في الواجهة.
                         </p>
                         <div class="flex items-center gap-3 pt-1">
-                            <input type="file" id="importExcelInput" accept=".xlsx, .xls, .csv, .json" class="hidden" onchange="handleSmartExcelImport(event)">
+                            <input type="file" id="importExcelInput" accept=".xlsx, .xls, .csv, .json" class="hidden" onchange="handleSingleSheetExcelImport(event)">
                             <button onclick="document.getElementById('importExcelInput').click()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-sm px-5 py-2.5 rounded-xl flex items-center gap-2 transition shadow">
-                                <i class="fa-solid fa-upload text-base"></i> اختيار ملف إكسل والاستيراد
+                                <i class="fa-solid fa-upload text-base"></i> اختيار الملف والاستيراد
                             </button>
                             <span id="importFileName" class="text-xs text-slate-400 font-bold truncate">لم يتم اختيار ملف</span>
                         </div>
@@ -523,6 +523,7 @@
         window.calls = [];
         window.selectedCustomerId = null;
         window.activeDetailCustId = null;
+        let isUIUpdating = false;
 
         document.addEventListener('DOMContentLoaded', () => {
             const todayStr = new Date().toISOString().split('T')[0];
@@ -537,19 +538,29 @@
             onValue(ref(db, 'qaleb_debts/customers'), (snapshot) => {
                 const data = snapshot.val();
                 window.customers = data ? Object.values(data) : [];
-                refreshUI();
+                scheduleUIRefresh();
             });
 
             onValue(ref(db, 'qaleb_debts/transactions'), (snapshot) => {
                 const data = snapshot.val();
                 window.transactions = data ? Object.values(data) : [];
-                refreshUI();
+                scheduleUIRefresh();
             });
 
             onValue(ref(db, 'qaleb_debts/calls'), (snapshot) => {
                 const data = snapshot.val();
                 window.calls = data ? Object.values(data) : [];
-                refreshUI();
+                scheduleUIRefresh();
+            });
+        }
+
+        // Throttle UI updates to prevent lagging and freezing when data updates frequently
+        function scheduleUIRefresh() {
+            if (isUIUpdating) return;
+            isUIUpdating = true;
+            requestAnimationFrame(() => {
+                window.refreshUI();
+                isUIUpdating = false;
             });
         }
 
@@ -614,7 +625,7 @@
             });
 
             const alertsList = document.getElementById('alertsList');
-            alertsList.innerHTML = '';
+            let alertsHtml = '';
             let alertCount = 0;
             const todayStr = new Date().toISOString().split('T')[0];
 
@@ -635,7 +646,7 @@
                         dueTodayCount++;
 
                         const isLate = c.targetDate < todayStr;
-                        alertsList.innerHTML += `
+                        alertsHtml += `
                             <div class="bg-slate-900 border-2 ${isLate ? 'border-rose-500/60' : 'border-amber-500/60'} p-4 rounded-xl flex items-center justify-between shadow-lg">
                                 <div class="space-y-1">
                                     <div class="flex items-center gap-3">
@@ -658,9 +669,10 @@
             });
 
             if (alertCount === 0) {
-                alertsList.innerHTML = `<p class="text-center text-base text-slate-400 py-6 font-bold">لا توجد تنبيهات تأخير أو استحقاقات مسجلة لهذا اليوم.</p>`;
+                alertsHtml = `<p class="text-center text-base text-slate-400 py-6 font-bold">لا توجد تنبيهات تأخير أو استحقاقات مسجلة لهذا اليوم.</p>`;
             }
 
+            alertsList.innerHTML = alertsHtml;
             document.getElementById('statTotalRemaining').innerText = window.formatCurr(totalRemaining);
             document.getElementById('statTotalOriginal').innerText = `إجمالي الديون الأصلية: ` + window.formatCurr(totalOriginal);
             document.getElementById('statMonthCollected').innerText = window.formatCurr(monthCollected);
@@ -770,20 +782,21 @@
 
         function renderCustomersTable() {
             const tbody = document.getElementById('customersTableBody');
-            tbody.innerHTML = '';
-
+            if (!tbody) return;
+            
             if (window.customers.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="9" class="text-center text-slate-400 py-8 font-bold text-base">لا يوجد زبائن مضافون حتى الآن.</td></tr>`;
                 return;
             }
 
+            let rowsHtml = '';
             window.customers.forEach(cust => {
                 const custTrans = window.transactions.filter(t => t.customerId === cust.id);
                 const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
                 const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
                 const remaining = debtSum - paySum;
 
-                tbody.innerHTML += `
+                rowsHtml += `
                     <tr class="hover:bg-slate-700/40">
                         <td class="p-3.5 font-black text-white text-base">${cust.name}</td>
                         <td class="p-3.5 text-slate-300 font-bold text-xs">${cust.createdAt}</td>
@@ -809,89 +822,48 @@
                     </tr>
                 `;
             });
+            tbody.innerHTML = rowsHtml;
         }
 
-        // ================= Advanced Multi-Sheet Export (English Headers) =================
-        window.exportMultiSheetExcel = function() {
+        // ================= Optimized Single-Sheet Excel Export & Import =================
+        window.exportSingleSheetExcel = function() {
             if (window.customers.length === 0) {
                 alert('لا توجد بيانات زبائن لتصديرها.');
                 return;
             }
 
-            const wb = XLSX.utils.book_new();
-
-            const mainRows = [
-                ["Al-Qaleb Concrete Factory - Main Customer Debt List"],
-                ["Export Date:", new Date().toISOString().split('T')[0], "", "", "", "", "", ""],
+            const rows = [
+                ["Al-Qaleb Concrete Factory - Comprehensive Financial & Debt Report"],
+                ["Export Date:", new Date().toISOString().split('T')[0], "", "", "", "", "", "", ""],
                 [],
-                ["No.", "Customer Name", "Phone Number", "Address", "Total Amount (IQD)", "Paid Amount (IQD)", "Remaining Amount (IQD)", "Customer Sheet Link"]
+                ["Customer ID", "Customer Name", "Phone Number", "Address", "Customer Notes", "Total Debt (IQD)", "Total Paid (IQD)", "Remaining (IQD)", "Registration Date"]
             ];
 
-            window.customers.forEach((cust, idx) => {
+            window.customers.forEach(cust => {
                 const custTrans = window.transactions.filter(t => t.customerId === cust.id);
                 const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
                 const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
                 const remaining = debtSum - paySum;
 
-                const safeSheetName = (cust.name || `Customer_${idx+1}`).replace(/[\\\/\?\*\[\]\:]/g, '_').substring(0, 30);
-                const hyperlinkFormula = `=HYPERLINK("#'${safeSheetName}'!A1", "Open Sheet")`;
-
-                mainRows.push([
-                    idx + 1,
+                rows.push([
+                    cust.id,
                     cust.name,
                     cust.phone,
-                    cust.address || '-',
+                    cust.address || '',
+                    cust.notes || '',
                     debtSum,
                     paySum,
                     remaining,
-                    { t: 's', v: hyperlinkFormula, l: { Target: `#'${safeSheetName}'!A1`, Tooltip: `Go to ${cust.name}` } }
+                    cust.createdAt || ''
                 ]);
             });
 
-            const wsMain = XLSX.utils.aoa_to_sheet(mainRows);
-            XLSX.utils.book_append_sheet(wb, wsMain, "Main List");
-
-            window.customers.forEach((cust, idx) => {
-                const safeSheetName = (cust.name || `Customer_${idx+1}`).replace(/[\\\/\?\*\[\]\:]/g, '_').substring(0, 30);
-                const custTrans = window.transactions.filter(t => t.customerId === cust.id).sort((a,b) => new Date(a.date) - new Date(b.date));
-                const custCalls = window.calls.filter(c => c.customerId === cust.id);
-
-                const subRows = [
-                    [`Customer Statement: ${cust.name}`],
-                    [`Phone: ${cust.phone}`, `Address: ${cust.address || 'N/A'}`, `Notes: ${cust.notes || 'None'}`],
-                    [],
-                    ["Financial Transactions (Pouring & Payments):"],
-                    ["No.", "Transaction Date", "Transaction Type", "Description / Note", "Amount (IQD)"]
-                ];
-
-                custTrans.forEach((t, tIdx) => {
-                    subRows.push([
-                        tIdx + 1,
-                        t.date,
-                        t.type === 'debt' ? 'Pouring / Debt (+)' : 'Payment (-)',
-                        t.note || '-',
-                        t.amount
-                    ]);
-                });
-
-                subRows.push([]);
-                subRows.push(["Calls and Appointments Log:"]);
-                subRows.push(["Call Date", "Agreed Target Date", "Notes / Result"]);
-
-                if (custCalls.length === 0) {
-                    subRows.push(["No calls recorded", "-", "-"]);
-                } else {
-                    custCalls.forEach(call => {
-                        subRows.push([call.date, call.targetDate || 'N/A', call.note]);
-                    });
-                }
-
-                const wsSub = XLSX.utils.aoa_to_sheet(subRows);
-                XLSX.utils.book_append_sheet(wb, wsSub, safeSheetName);
-            });
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(rows);
+            XLSX.utils.book_append_sheet(wb, ws, "Customers Data");
 
             const todayStr = new Date().toISOString().split('T')[0];
-            XLSX.writeFile(wb, `AlQaleb_MultiSheet_Backup_${todayStr}.xlsx`);
+            XLSX.writeFile(wb, `AlQaleb_SingleSheet_Backup_${todayStr}.xlsx`);
         };
 
         window.exportFullDataJSON = function() {
@@ -908,8 +880,7 @@
             document.body.removeChild(link);
         };
 
-        // Smart Flexible Excel Import (Handles manual files & multi-sheets without automatic notes)
-        window.handleSmartExcelImport = function(event) {
+        window.handleSingleSheetExcelImport = function(event) {
             const file = event.target.files[0];
             if (!file) return;
 
@@ -938,75 +909,68 @@
                     try {
                         const data = new Uint8Array(e.target.result);
                         const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-                        let importedCustomersCount = 0;
-                        let importedTransactionsCount = 0;
+                        let importedCount = 0;
                         const todayStr = new Date().toISOString().split('T')[0];
 
-                        workbook.SheetNames.forEach(sheetName => {
-                            if (sheetName === "Main List" || sheetName === "القائمة الرئيسية" || sheetName === "الملخص") return;
+                        // Skip header rows and parse data rows
+                        for (let i = 4; i < rows.length; i++) {
+                            const row = rows[i];
+                            if (row && row.length >= 2 && row[1]) {
+                                const custName = String(row[1]).trim();
+                                const custPhone = String(row[2] || '07800000000').trim();
+                                const custAddress = String(row[3] || '').trim();
+                                const custNotes = String(row[4] || '').trim();
+                                const initialDebt = Number(row[5]) || 0;
+                                const initialPaid = Number(row[6]) || 0;
 
-                            const worksheet = workbook.Sheets[sheetName];
-                            const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                                const custId = String(row[0] || '').trim().startsWith('CUST_') ? String(row[0]).trim() : 'CUST_' + Date.now() + '_' + i;
 
-                            const customerName = sheetName.trim();
-                            if (!customerName) return;
+                                const custObj = {
+                                    id: custId,
+                                    name: custName,
+                                    phone: custPhone,
+                                    address: custAddress,
+                                    notes: custNotes,
+                                    createdAt: todayStr
+                                };
 
-                            const customerId = 'CUST_IMP_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-                            
-                            const newCust = {
-                                id: customerId,
-                                name: customerName,
-                                phone: '07800000000',
-                                address: 'مستورد من إكسل',
-                                notes: '', // Clean notes without automated tags
-                                createdAt: todayStr
-                            };
-                            set(ref(db, 'qaleb_debts/customers/' + customerId), newCust);
-                            importedCustomersCount++;
+                                set(ref(db, 'qaleb_debts/customers/' + custId), custObj);
 
-                            rows.forEach((row, rIdx) => {
-                                if (row && row.length > 0) {
-                                    let foundAmount = 0;
-                                    let foundNote = 'حركة صب / دين';
-                                    let trxType = 'debt'; // default pouring/debt
-
-                                    row.forEach(cell => {
-                                        const cellStr = String(cell || '').trim();
-                                        const lowerCell = cellStr.toLowerCase();
-                                        
-                                        if (lowerCell.includes('تسديد') || lowerCell.includes('pay') || lowerCell.includes('قبض')) {
-                                            trxType = 'pay';
-                                        }
-
-                                        const num = Number(cellStr.replace(/,/g, ''));
-                                        if (!isNaN(num) && num > 100 && foundAmount === 0) {
-                                            foundAmount = num;
-                                        } else if (cellStr.length > 3 && !cellStr.match(/^\d+$/)) {
-                                            foundNote = cellStr;
-                                        }
+                                if (initialDebt > 0) {
+                                    const debtTrxId = 'TRX_IMP_DEBT_' + Date.now() + '_' + i;
+                                    set(ref(db, 'qaleb_debts/transactions/' + debtTrxId), {
+                                        id: debtTrxId,
+                                        customerId: custId,
+                                        type: 'debt',
+                                        date: todayStr,
+                                        amount: initialDebt,
+                                        note: 'رصيد مستورد'
                                     });
-
-                                    if (foundAmount > 0) {
-                                        const trxId = 'TRX_SMART_' + Date.now() + '_' + rIdx + Math.floor(Math.random() * 1000);
-                                        const newTrx = {
-                                            id: trxId,
-                                            customerId: customerId,
-                                            type: trxType,
-                                            date: todayStr,
-                                            amount: foundAmount,
-                                            note: foundNote
-                                        };
-                                        set(ref(db, 'qaleb_debts/transactions/' + trxId), newTrx);
-                                        importedTransactionsCount++;
-                                    }
                                 }
-                            });
-                        });
 
-                        alert(`تم الاستيراد الذكي بنجاح!\n- عدد الزبائن: ${importedCustomersCount}\n- عدد حركات الصب والتسديد: ${importedTransactionsCount}`);
+                                if (initialPaid > 0) {
+                                    const payTrxId = 'TRX_IMP_PAY_' + Date.now() + '_' + i;
+                                    set(ref(db, 'qaleb_debts/transactions/' + payTrxId), {
+                                        id: payTrxId,
+                                        customerId: custId,
+                                        type: 'pay',
+                                        date: todayStr,
+                                        amount: initialPaid,
+                                        note: 'دفعة مسددة مستوردة'
+                                    });
+                                }
+
+                                importedCount++;
+                            }
+                        }
+
+                        alert(`تم استيراد ${importedCount} زبون بنجاح من ملف الإكسل بدون أي ثقل أو شيتات متعددة.`);
                     } catch(err) {
-                        alert('حدث خطأ أثناء قراءة الملف: ' + err.message);
+                        alert('حدث خطأ أثناء قراءة ملف الإكسل: ' + err.message);
                     }
                 };
                 reader.readAsArrayBuffer(file);
@@ -1017,13 +981,15 @@
         window.filterCustomerSelect = function() {
             const query = document.getElementById('actionSearchInput').value.toLowerCase().trim();
             const resultsContainer = document.getElementById('actionSearchResults');
+            if (!resultsContainer) return;
             resultsContainer.innerHTML = '';
 
             if (!query) return;
 
             const filtered = window.customers.filter(c => c.name.toLowerCase().includes(query) || c.phone.includes(query));
+            let html = '';
             filtered.forEach(cust => {
-                resultsContainer.innerHTML += `
+                html += `
                     <div onclick="selectCustomerForAction('${cust.id}')" class="p-4 bg-slate-900 hover:bg-slate-700/80 rounded-xl border border-slate-700 cursor-pointer flex justify-between items-center transition">
                         <div>
                             <p class="font-black text-lg text-white">${cust.name}</p>
@@ -1033,6 +999,7 @@
                     </div>
                 `;
             });
+            resultsContainer.innerHTML = html;
         };
 
         window.selectCustomerForAction = function(custID) {
@@ -1116,6 +1083,7 @@
         // ================= Tab 4: Logs Summary =================
         function renderLogsSummaryTable() {
             const tbody = document.getElementById('logsSummaryTableBody');
+            if (!tbody) return;
             tbody.innerHTML = '';
 
             if (window.customers.length === 0) {
@@ -1123,13 +1091,14 @@
                 return;
             }
 
+            let htmlRows = '';
             window.customers.forEach(cust => {
                 const custTrans = window.transactions.filter(t => t.customerId === cust.id);
                 const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
                 const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
                 const remaining = debtSum - paySum;
 
-                tbody.innerHTML += `
+                htmlRows += `
                     <tr class="hover:bg-slate-700/40">
                         <td class="p-4 font-black text-white text-lg">${cust.name}</td>
                         <td class="p-4 font-mono font-bold text-amber-300">${cust.phone}</td>
@@ -1153,6 +1122,7 @@
                     </tr>
                 `;
             });
+            tbody.innerHTML = htmlRows;
         }
 
         window.openCustomerDetailsModal = function(custID) {

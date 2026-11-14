@@ -131,6 +131,21 @@
                 </div>
             </div>
 
+            <!-- Overview Search & Filter Bar -->
+            <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl p-4 shadow-lg flex flex-wrap items-center gap-4">
+                <div class="flex-1 min-w-[240px] relative">
+                    <i class="fa-solid fa-magnifying-glass absolute right-4 top-3.5 text-slate-400"></i>
+                    <input type="text" id="overviewSearchInput" oninput="renderOverview()" placeholder="بحث في التنبيهات (اسم الزبون أو الهاتف)..." class="w-full bg-slate-900 border border-slate-700 rounded-xl pr-11 pl-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <select id="overviewFilterType" onchange="renderOverview()" class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
+                        <option value="all">كافة التنبيهات</option>
+                        <option value="late">التنبيهات المتأخرة فقط</option>
+                        <option value="today">استحقاقات اليوم فقط</option>
+                    </select>
+                </div>
+            </div>
+
             <!-- Alerts List -->
             <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl p-6 shadow-xl space-y-4">
                 <div class="flex items-center justify-between border-b border-slate-700 pb-4">
@@ -155,6 +170,28 @@
                     <button onclick="openAddCustomerModal()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-base px-5 py-3 rounded-xl flex items-center gap-2 shadow-lg transition">
                         <i class="fa-solid fa-user-plus text-lg"></i> إضافة زبون جديد
                     </button>
+                </div>
+
+                <!-- Customer Search & Filter Bar -->
+                <div class="flex flex-wrap items-center gap-4 bg-slate-900 p-4 rounded-xl border border-slate-700">
+                    <div class="flex-1 min-w-[240px] relative">
+                        <i class="fa-solid fa-magnifying-glass absolute right-4 top-3.5 text-slate-400"></i>
+                        <input type="text" id="custSearchInput" oninput="renderCustomersTable()" placeholder="ابحث باسم الزبون، رقم الهاتف، أو العنوان..." class="w-full bg-slate-800 border border-slate-700 rounded-xl pr-11 pl-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <select id="custFilterBalance" onchange="renderCustomersTable()" class="bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
+                            <option value="all">كافة الزبائن</option>
+                            <option value="debtors">الزبائن أصحاب الديون المتبقية فقط</option>
+                            <option value="cleared">الزبائن المسددين بالكامل (رصفر)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <select id="custSortOrder" onchange="renderCustomersTable()" class="bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
+                            <option value="name">ترتيب حسب الاسم (أ-ي)</option>
+                            <option value="highest_debt">ترتيب حسب أعلى دين متبقي</option>
+                            <option value="newest">ترتيب حسب الأحدث تسجيلاً</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="overflow-x-auto">
@@ -235,9 +272,17 @@
                     <p class="text-sm text-slate-300 font-semibold">ابحث عن الزبون لتنفيذ عمليات إضافة دين، تسديد، أو تدوين المكالمات المباشرة</p>
                 </div>
 
-                <div class="relative max-w-xl">
-                    <i class="fa-solid fa-magnifying-glass absolute right-4 top-4 text-slate-400 text-lg"></i>
-                    <input type="text" id="actionSearchInput" oninput="filterCustomerSelect()" placeholder="ابحث باسم الزبون أو رقم الهاتف..." class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl pr-12 pl-4 py-3.5 text-base font-bold text-white focus:outline-none focus:border-amber-500 shadow-inner">
+                <div class="flex flex-wrap items-center gap-4">
+                    <div class="flex-1 relative min-w-[260px]">
+                        <i class="fa-solid fa-magnifying-glass absolute right-4 top-4 text-slate-400 text-lg"></i>
+                        <input type="text" id="actionSearchInput" oninput="filterCustomerSelect()" placeholder="ابحث باسم الزبون أو رقم الهاتف..." class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl pr-12 pl-4 py-3.5 text-base font-bold text-white focus:outline-none focus:border-amber-500 shadow-inner">
+                    </div>
+                    <div>
+                        <select id="actionFilterOnlyDebtors" onchange="filterCustomerSelect()" class="bg-slate-900 border-2 border-slate-700 rounded-xl px-4 py-3.5 text-base font-bold text-white focus:outline-none focus:border-amber-500">
+                            <option value="all">كل الزبائن</option>
+                            <option value="debtors">الزبائن الذين عليهم ديون فقط</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div id="selectedCustomerCard" class="hidden bg-slate-900 border-2 border-slate-700 rounded-2xl p-6 space-y-6">
@@ -280,6 +325,27 @@
                     <button onclick="printGlobalReport()" class="bg-slate-700 hover:bg-slate-600 text-white font-black px-5 py-3 rounded-xl flex items-center gap-2 border border-slate-600 shadow-lg transition text-base">
                         <i class="fa-solid fa-print text-lg"></i> طباعة كشف عام A4
                     </button>
+                </div>
+
+                <!-- Logs Search & Filter Bar -->
+                <div class="flex flex-wrap items-center gap-4 bg-slate-900 p-4 rounded-xl border border-slate-700">
+                    <div class="flex-1 min-w-[240px] relative">
+                        <i class="fa-solid fa-magnifying-glass absolute right-4 top-3.5 text-slate-400"></i>
+                        <input type="text" id="logsSearchInput" oninput="renderLogsSummaryTable()" placeholder="بحث في السجلات (الاسم، الهاتف، أو العنوان)..." class="w-full bg-slate-800 border border-slate-700 rounded-xl pr-11 pl-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <select id="logsFilterBalance" onchange="renderLogsSummaryTable()" class="bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
+                            <option value="all">كافة السجلات</option>
+                            <option value="debtors">الذين لديهم ديون متبقية فقط</option>
+                            <option value="cleared">المسددون بالكامل فقط</option>
+                        </select>
+                    </div>
+                    <div>
+                        <select id="logsSortOrder" onchange="renderLogsSummaryTable()" class="bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
+                            <option value="name">ترتيب حسب الاسم (أ-ي)</option>
+                            <option value="highest_debt">ترتيب حسب أعلى دين متبقي</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="overflow-x-auto">
@@ -647,6 +713,9 @@
             let alertCount = 0;
             const todayStr = new Date().toISOString().split('T')[0];
 
+            const overviewSearch = (document.getElementById('overviewSearchInput')?.value || '').toLowerCase().trim();
+            const overviewFilter = document.getElementById('overviewFilterType')?.value || 'all';
+
             window.customers.forEach(cust => {
                 const custTrans = window.transactions.filter(t => t.customerId === cust.id);
                 const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
@@ -659,11 +728,20 @@
                 const custCalls = window.calls.filter(c => c.customerId === cust.id && c.targetDate);
                 custCalls.forEach(c => {
                     if (remaining > 0 && c.targetDate <= todayStr) {
+                        const isLate = c.targetDate < todayStr;
+
+                        // Apply filters
+                        if (overviewFilter === 'late' && !isLate) return;
+                        if (overviewFilter === 'today' && isLate) return;
+
+                        if (overviewSearch && !cust.name.toLowerCase().includes(overviewSearch) && !cust.phone.includes(overviewSearch)) {
+                            return;
+                        }
+
                         alertCount++;
                         dueTodayAmount += remaining;
                         dueTodayCount++;
 
-                        const isLate = c.targetDate < todayStr;
                         alertsHtml += `
                             <div class="bg-slate-900 border-2 ${isLate ? 'border-rose-500/60' : 'border-amber-500/60'} p-4 rounded-xl flex items-center justify-between shadow-lg">
                                 <div class="space-y-1">
@@ -687,7 +765,7 @@
             });
 
             if (alertCount === 0) {
-                alertsHtml = `<p class="text-center text-base text-slate-400 py-6 font-bold">لا توجد تنبيهات تأخير أو استحقاقات مسجلة لهذا اليوم.</p>`;
+                alertsHtml = `<p class="text-center text-base text-slate-400 py-6 font-bold">لا توجد تنبيهات تأخير أو استحقاقات مطابقة لبحثك.</p>`;
             }
 
             alertsList.innerHTML = alertsHtml;
@@ -720,11 +798,9 @@
             document.getElementById('custAddress').value = cust.address || '';
             document.getElementById('custNotes').value = cust.notes || '';
             
-            // Hide initial input box, show editable financial box when editing
             document.getElementById('initialFinancialsContainer').style.display = 'none';
             document.getElementById('editFinancialsContainer').classList.remove('hidden');
 
-            // Calculate current customer totals from transactions
             const custTrans = window.transactions.filter(t => t.customerId === cust.id);
             const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
             const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
@@ -752,10 +828,8 @@
             const notes = document.getElementById('custNotes').value.trim();
 
             if (editId) {
-                // Update basic info
                 update(ref(db, 'qaleb_debts/customers/' + editId), { name, phone, address, notes })
                     .then(() => {
-                        // If editing financials, update or create adjustment transactions
                         const newTotal = Number(document.getElementById('editTotalAmount').value) || 0;
                         const newPaid = Number(document.getElementById('editPaidAmount').value) || 0;
                         
@@ -862,13 +936,45 @@
             const tbody = document.getElementById('customersTableBody');
             if (!tbody) return;
             
-            if (window.customers.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" class="text-center text-slate-400 py-8 font-bold text-base">لا يوجد زبائن مضافون حتى الآن.</td></tr>`;
+            const search = (document.getElementById('custSearchInput')?.value || '').toLowerCase().trim();
+            const filterBalance = document.getElementById('custFilterBalance')?.value || 'all';
+            const sortOrder = document.getElementById('custSortOrder')?.value || 'name';
+
+            let list = window.customers.filter(cust => {
+                const matchText = cust.name.toLowerCase().includes(search) || cust.phone.includes(search) || (cust.address || '').toLowerCase().includes(search);
+                if (!matchText) return false;
+
+                const custTrans = window.transactions.filter(t => t.customerId === cust.id);
+                const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
+                const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
+                const remaining = debtSum - paySum;
+
+                if (filterBalance === 'debtors' && remaining <= 0) return false;
+                if (filterBalance === 'cleared' && remaining > 0) return false;
+
+                return true;
+            });
+
+            // Sorting
+            list.sort((a, b) => {
+                const aTrans = window.transactions.filter(t => t.customerId === a.id);
+                const aRem = aTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0) - aTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
+
+                const bTrans = window.transactions.filter(t => t.customerId === b.id);
+                const bRem = bTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0) - bTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
+
+                if (sortOrder === 'highest_debt') return bRem - aRem;
+                if (sortOrder === 'newest') return (b.createdAt || '').localeCompare(a.createdAt || '');
+                return a.name.localeCompare(b.name, 'ar');
+            });
+
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center text-slate-400 py-8 font-bold text-base">لا توجد نتائج مطابقة لخيارات البحث أو الفلترة.</td></tr>`;
                 return;
             }
 
             let rowsHtml = '';
-            window.customers.forEach(cust => {
+            list.forEach(cust => {
                 const custTrans = window.transactions.filter(t => t.customerId === cust.id);
                 const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
                 const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
@@ -1057,26 +1163,49 @@
         // ================= Tab 3: Actions =================
         window.filterCustomerSelect = function() {
             const query = document.getElementById('actionSearchInput').value.toLowerCase().trim();
+            const filterDebtors = document.getElementById('actionFilterOnlyDebtors').value;
             const resultsContainer = document.getElementById('actionSearchResults');
             if (!resultsContainer) return;
             resultsContainer.innerHTML = '';
 
-            if (!query) return;
+            if (!query && filterDebtors === 'all') return;
 
-            const filtered = window.customers.filter(c => c.name.toLowerCase().includes(query) || c.phone.includes(query));
+            const filtered = window.customers.filter(cust => {
+                const matchQuery = !query || cust.name.toLowerCase().includes(query) || cust.phone.includes(query);
+                if (!matchQuery) return false;
+
+                if (filterDebtors === 'debtors') {
+                    const custTrans = window.transactions.filter(t => t.customerId === cust.id);
+                    const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
+                    const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
+                    const remaining = debtSum - paySum;
+                    if (remaining <= 0) return false;
+                }
+
+                return true;
+            });
+
             let html = '';
             filtered.forEach(cust => {
+                const custTrans = window.transactions.filter(t => t.customerId === cust.id);
+                const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
+                const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
+                const remaining = debtSum - paySum;
+
                 html += `
                     <div onclick="selectCustomerForAction('${cust.id}')" class="p-4 bg-slate-900 hover:bg-slate-700/80 rounded-xl border border-slate-700 cursor-pointer flex justify-between items-center transition">
                         <div>
                             <p class="font-black text-lg text-white">${cust.name}</p>
                             <p class="text-xs text-slate-300 font-bold">${cust.phone} | ${cust.address || 'بلا عنوان'}</p>
                         </div>
-                        <span class="text-sm text-amber-400 font-black">اختيار الزبون &larr;</span>
+                        <div class="text-left flex items-center gap-4">
+                            <span class="text-xs font-black ${remaining > 0 ? 'text-amber-400' : 'text-slate-400'}">المتبقي: ${window.formatCurr(remaining)}</span>
+                            <span class="text-sm text-amber-400 font-black">اختيار &larr;</span>
+                        </div>
                     </div>
                 `;
             });
-            resultsContainer.innerHTML = html;
+            resultsContainer.innerHTML = html.length > 0 ? html : `<p class="text-center text-slate-400 py-4 font-bold">لا توجد نتائج مطابقة في مركز الاتصالات.</p>`;
         };
 
         window.selectCustomerForAction = function(custID) {
@@ -1163,13 +1292,43 @@
             if (!tbody) return;
             tbody.innerHTML = '';
 
-            if (window.customers.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-slate-400 py-8 font-bold text-base">لا توجد سجلات زبائن مسجلة.</td></tr>`;
+            const search = (document.getElementById('logsSearchInput')?.value || '').toLowerCase().trim();
+            const filterBalance = document.getElementById('logsFilterBalance')?.value || 'all';
+            const sortOrder = document.getElementById('logsSortOrder')?.value || 'name';
+
+            let list = window.customers.filter(cust => {
+                const matchText = cust.name.toLowerCase().includes(search) || cust.phone.includes(search) || (cust.address || '').toLowerCase().includes(search);
+                if (!matchText) return false;
+
+                const custTrans = window.transactions.filter(t => t.customerId === cust.id);
+                const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
+                const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
+                const remaining = debtSum - paySum;
+
+                if (filterBalance === 'debtors' && remaining <= 0) return false;
+                if (filterBalance === 'cleared' && remaining > 0) return false;
+
+                return true;
+            });
+
+            list.sort((a, b) => {
+                const aTrans = window.transactions.filter(t => t.customerId === a.id);
+                const aRem = aTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0) - aTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
+
+                const bTrans = window.transactions.filter(t => t.customerId === b.id);
+                const bRem = bTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0) - bTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
+
+                if (sortOrder === 'highest_debt') return bRem - aRem;
+                return a.name.localeCompare(b.name, 'ar');
+            });
+
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-slate-400 py-8 font-bold text-base">لا توجد سجلات مطابقة لخيارات البحث أو الفلترة.</td></tr>`;
                 return;
             }
 
             let htmlRows = '';
-            window.customers.forEach(cust => {
+            list.forEach(cust => {
                 const custTrans = window.transactions.filter(t => t.customerId === cust.id);
                 const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
                 const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);

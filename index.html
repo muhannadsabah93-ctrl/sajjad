@@ -316,6 +316,39 @@
 
         <!-- Tab 4: Logs Summary Table -->
         <section id="sec-logs" class="tab-content hidden space-y-6">
+            <!-- Summary Stats Cards at the Top of Logs -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div class="bg-slate-800 border-2 border-slate-700 p-5 rounded-2xl shadow-xl flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-slate-300 font-extrabold mb-1">مجموع المبالغ لكل الزبائن (الكلي)</p>
+                        <h3 class="text-2xl font-black text-rose-400" id="logsStatTotalOriginal">0 د.ع</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-rose-500/20 text-rose-400 rounded-xl flex items-center justify-center text-xl border border-rose-500/40">
+                        <i class="fa-solid fa-file-invoice-dollar"></i>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800 border-2 border-slate-700 p-5 rounded-2xl shadow-xl flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-slate-300 font-extrabold mb-1">مجموع المبالغ المسددة</p>
+                        <h3 class="text-2xl font-black text-emerald-400" id="logsStatTotalPaid">0 د.ع</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-xl flex items-center justify-center text-xl border border-emerald-500/40">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800 border-2 border-slate-700 p-5 rounded-2xl shadow-xl flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-slate-300 font-extrabold mb-1">مجموع الديون المتبقية</p>
+                        <h3 class="text-2xl font-black text-amber-400" id="logsStatTotalRemaining">0 د.ع</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-amber-500/20 text-amber-400 rounded-xl flex items-center justify-center text-xl border border-amber-500/40">
+                        <i class="fa-solid fa-wallet"></i>
+                    </div>
+                </div>
+            </div>
+
             <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl p-6 shadow-xl space-y-6">
                 <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-700 pb-4">
                     <div>
@@ -483,7 +516,7 @@
         </div>
     </div>
 
-    <!-- Add Pour Modal (Updated from Add Debt Modal) -->
+    <!-- Add Pour Modal -->
     <div id="addDebtModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4 no-print">
         <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-700 pb-3">
@@ -496,8 +529,23 @@
                     <input type="date" id="debtDate" required class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white">
                 </div>
                 <div>
-                    <label class="block text-sm text-slate-300 mb-1">نوع الصب *</label>
-                    <input type="text" id="pourType" placeholder="مثال: صب أسس، صب سقف، صب أرضية..." required class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white">
+                    <label class="block text-sm text-slate-300 mb-1">نوع الكونكريت *</label>
+                    <select id="pourType" required class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-amber-500">
+                        <option value="C15">C15</option>
+                        <option value="C20">C20</option>
+                        <option value="C25">C25</option>
+                        <option value="C30">C30</option>
+                        <option value="C35">C35</option>
+                        <option value="C40">C40</option>
+                        <option value="C45">C45</option>
+                        <option value="C50">C50</option>
+                        <option value="C55">C55</option>
+                        <option value="C60">C60</option>
+                        <option value="C65">C65</option>
+                        <option value="C70">C70</option>
+                        <option value="C75">C75</option>
+                        <option value="C80">C80</option>
+                    </select>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
@@ -701,7 +749,7 @@
             return Number(num || 0).toLocaleString('ar-IQ') + ' د.ع';
         };
 
-        // ================= Tab 1: Overview (تمت مراجعة ودقيق الدوال لتطابق مجموع الزبائن 100%) =================
+        // ================= Tab 1: Overview =================
         function renderOverview() {
             let totalRemaining = 0;
             let totalOriginal = 0;
@@ -713,7 +761,6 @@
             const currentMonth = now.getMonth();
             let monthCollected = 0;
 
-            // حساب تحصيلات الشهر الحالي
             window.transactions.forEach(t => {
                 const tDate = new Date(t.date);
                 if (t.type === 'pay') {
@@ -731,7 +778,6 @@
             const overviewSearch = (document.getElementById('overviewSearchInput')?.value || '').toLowerCase().trim();
             const overviewFilter = document.getElementById('overviewFilterType')?.value || 'all';
 
-            // التدقيق والمطابقة التامة: تجميع الديون عبر المرور على كافة الزبائن تماماً مثل جدول الزبائن
             window.customers.forEach(cust => {
                 const custTrans = window.transactions.filter(t => t.customerId === cust.id);
                 const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
@@ -741,7 +787,6 @@
                 totalOriginal += debtSum;
                 totalRemaining += remaining;
 
-                // فحص التنبيهات ومواعيد الاتصال الاستحقاقية للزبائن الذين لديهم مبالغ متبقية
                 const custCalls = window.calls.filter(c => c.customerId === cust.id && c.targetDate);
                 custCalls.forEach(c => {
                     if (remaining > 0 && c.targetDate <= todayStr) {
@@ -864,7 +909,7 @@
                                 type: 'debt',
                                 date: todayStr,
                                 amount: diffDebt,
-                                pourType: 'تسوية صب',
+                                pourType: 'C30',
                                 note: 'تسوية وتعديل المبلغ الكلي يدويأ'
                             });
                         }
@@ -906,7 +951,7 @@
                             type: 'debt',
                             date: todayStr,
                             amount: initialTotal,
-                            pourType: 'رصيد ابتدائي',
+                            pourType: 'C30',
                             note: 'رصيد صب/دين ابتدائي'
                         });
                     }
@@ -962,7 +1007,7 @@
             }
         };
 
-        function renderCustomersTable() {
+        window.renderCustomersTable = function() {
             const tbody = document.getElementById('customersTableBody');
             if (!tbody) return;
             
@@ -971,7 +1016,10 @@
             const sortOrder = document.getElementById('custSortOrder')?.value || 'name';
 
             let list = window.customers.filter(cust => {
-                const matchText = cust.name.toLowerCase().includes(search) || cust.phone.includes(search) || (cust.address || '').toLowerCase().includes(search);
+                const nameMatch = (cust.name || '').toLowerCase().includes(search);
+                const phoneMatch = (cust.phone || '').toLowerCase().includes(search);
+                const addressMatch = (cust.address || '').toLowerCase().includes(search);
+                const matchText = !search || nameMatch || phoneMatch || addressMatch;
                 if (!matchText) return false;
 
                 const custTrans = window.transactions.filter(t => t.customerId === cust.id);
@@ -1160,7 +1208,7 @@
                                         type: 'debt',
                                         date: todayStr,
                                         amount: initialDebt,
-                                        pourType: 'رصيد مستورد',
+                                        pourType: 'C30',
                                         note: 'رصيد مستورد'
                                     });
                                 }
@@ -1201,7 +1249,9 @@
             if (!query && filterDebtors === 'all') return;
 
             const filtered = window.customers.filter(cust => {
-                const matchQuery = !query || cust.name.toLowerCase().includes(query) || cust.phone.includes(query);
+                const nameMatch = (cust.name || '').toLowerCase().includes(query);
+                const phoneMatch = (cust.phone || '').toLowerCase().includes(query);
+                const matchQuery = !query || nameMatch || phoneMatch;
                 if (!matchQuery) return false;
 
                 if (filterDebtors === 'debtors') {
@@ -1261,7 +1311,7 @@
 
         window.openAddDebtModal = function() { 
             if (window.selectedCustomerId) {
-                document.getElementById('pourType').value = '';
+                document.getElementById('pourType').value = 'C30';
                 document.getElementById('pourQuantity').value = '';
                 document.getElementById('pourPrice').value = '';
                 document.getElementById('pourTotalDisplay').innerText = '0 د.ع';
@@ -1293,7 +1343,7 @@
                 type: 'debt',
                 date: document.getElementById('debtDate').value,
                 amount: totalAmount,
-                pourType: document.getElementById('pourType').value.trim(),
+                pourType: document.getElementById('pourType').value,
                 quantity: qty,
                 price: price,
                 note: document.getElementById('debtNote').value.trim()
@@ -1341,17 +1391,39 @@
         };
 
         // ================= Tab 4: Logs Summary =================
-        function renderLogsSummaryTable() {
+        window.renderLogsSummaryTable = function() {
             const tbody = document.getElementById('logsSummaryTableBody');
             if (!tbody) return;
             tbody.innerHTML = '';
+
+            let grandTotalOriginal = 0;
+            let grandTotalPaid = 0;
+            let grandTotalRemaining = 0;
+
+            window.customers.forEach(cust => {
+                const custTrans = window.transactions.filter(t => t.customerId === cust.id);
+                const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
+                const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
+                const remaining = debtSum - paySum;
+
+                grandTotalOriginal += debtSum;
+                grandTotalPaid += paySum;
+                grandTotalRemaining += remaining;
+            });
+
+            document.getElementById('logsStatTotalOriginal').innerText = window.formatCurr(grandTotalOriginal);
+            document.getElementById('logsStatTotalPaid').innerText = window.formatCurr(grandTotalPaid);
+            document.getElementById('logsStatTotalRemaining').innerText = window.formatCurr(grandTotalRemaining);
 
             const search = (document.getElementById('logsSearchInput')?.value || '').toLowerCase().trim();
             const filterBalance = document.getElementById('logsFilterBalance')?.value || 'all';
             const sortOrder = document.getElementById('logsSortOrder')?.value || 'name';
 
             let list = window.customers.filter(cust => {
-                const matchText = cust.name.toLowerCase().includes(search) || cust.phone.includes(search) || (cust.address || '').toLowerCase().includes(search);
+                const nameMatch = (cust.name || '').toLowerCase().includes(search);
+                const phoneMatch = (cust.phone || '').toLowerCase().includes(search);
+                const addressMatch = (cust.address || '').toLowerCase().includes(search);
+                const matchText = !search || nameMatch || phoneMatch || addressMatch;
                 if (!matchText) return false;
 
                 const custTrans = window.transactions.filter(t => t.customerId === cust.id);
@@ -1517,7 +1589,7 @@
                                                 ${t.type === 'debt' ? 'عملية صب (+)' : 'عملية تسديد (-)'}
                                             </td>
                                             <td class="p-3 text-slate-200 font-semibold">
-                                                ${t.type === 'debt' ? `<b>النوع:</b> ${t.pourType || 'صب'} | <b>الكمية:</b> ${t.quantity || '-'} | <b>السعر:</b> ${t.price ? window.formatCurr(t.price) : '-'}<br>` : ''}
+                                                ${t.type === 'debt' ? `<b>نوع الكونكريت:</b> ${t.pourType || 'C30'} | <b>الكمية:</b> ${t.quantity || '-'} | <b>السعر:</b> ${t.price ? window.formatCurr(t.price) : '-'}<br>` : ''}
                                                 <b>ملاحظات:</b> ${t.note || '-'}
                                             </td>
                                             <td class="p-3 font-black text-white">${window.formatCurr(t.amount)}</td>
@@ -1559,16 +1631,30 @@
             body.innerHTML = htmlContent;
         };
 
-        // ================= Printing Engine =================
+        // ================= Printing Engine (الشعار المرفق في الوسط + رقم الهاتف 077301508888) =================
         function getStandardPrintHeader(docTypeName, cust, dateStr) {
+            const logoSvg = `<svg width="70" height="70" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg" style="display:block; margin: 0 auto 8px auto;">
+                <path d="M250 35 L450 150 L450 350 L250 465 L50 350 L50 150 Z" fill="none" stroke="#334155" stroke-width="24"/>
+                <polygon points="250,160 340,210 340,310 250,360 160,310 160,210" fill="#0d9488"/>
+                <g fill="#334155">
+                    <circle cx="410" cy="180" r="14"/><circle cx="430" cy="220" r="12"/><circle cx="395" cy="235" r="16"/>
+                    <circle cx="420" cy="275" r="15"/><circle cx="390" cy="300" r="13"/><circle cx="440" cy="330" r="11"/>
+                    <circle cx="360" cy="340" r="14"/><circle cx="390" cy="370" r="12"/><circle cx="335" cy="375" r="15"/>
+                    <circle cx="280" cy="415" r="12"/><circle cx="250" cy="445" r="14"/><circle cx="215" cy="415" r="13"/>
+                    <circle cx="185" cy="435" r="11"/><circle cx="150" cy="410" r="15"/><circle cx="125" cy="430" r="12"/>
+                    <circle cx="95" cy="395" r="14"/><circle cx="70" cy="370" r="13"/>
+                </g>
+            </svg>`;
+
             return `
                 <div class="text-center border-b-4 border-black pb-4 mb-6 space-y-1">
+                    ${logoSvg}
                     <h1 class="text-4xl font-black text-black tracking-wider">معامل القالب للكونكريت</h1>
                     <h2 class="text-2xl font-black text-black">قسم الحسابات</h2>
                     <div class="pt-3 flex justify-between items-end text-sm font-black text-black border-t-2 border-black mt-3 pt-2">
                         <div class="text-right space-y-1">
                             <p class="text-base">اسم الزبون: <span class="text-lg font-black underline">${cust.name}</span></p>
-                            <p>رقم الهاتف: <span>${cust.phone}</span> | العنوان: <span>${cust.address || 'غير محدد'}</span></p>
+                            <p>رقم الهاتف: <span>077301508888</span> | العنوان: <span>${cust.address || 'غير محدد'}</span></p>
                         </div>
                         <div class="text-left space-y-1">
                             <p>التاريخ: <span>${dateStr}</span></p>
@@ -1618,7 +1704,7 @@
                             <tr class="text-black font-black text-base">
                                 <td class="border-2 border-black p-3.5 text-center">1</td>
                                 <td class="border-2 border-black p-3.5">
-                                    ${trx.type === 'debt' ? `<b>نوع الصب:</b> ${trx.pourType || 'صب'} | <b>الكمية:</b> ${trx.quantity || '-'} | <b>السعر:</b> ${trx.price ? window.formatCurr(trx.price) : '-'}<br>` : ''}
+                                    ${trx.type === 'debt' ? `<b>نوع الكونكريت:</b> ${trx.pourType || 'C30'} | <b>الكمية:</b> ${trx.quantity || '-'} | <b>السعر:</b> ${trx.price ? window.formatCurr(trx.price) : '-'}<br>` : ''}
                                     <b>ملاحظات:</b> ${trx.note || docType}
                                 </td>
                                 <td class="border-2 border-black p-3.5">
@@ -1712,7 +1798,7 @@
                                     <td class="border-2 border-black p-3 text-center font-black">${i + 1}</td>
                                     <td class="border-2 border-black p-3 font-mono">${t.date}</td>
                                     <td class="border-2 border-black p-3">
-                                        ${t.type === 'debt' ? `<b>نوع:</b> ${t.pourType || 'صب'} | <b>كمية:</b> ${t.quantity || '-'} | <b>سعر:</b> ${t.price ? window.formatCurr(t.price) : '-'}<br>` : ''}
+                                        ${t.type === 'debt' ? `<b>نوع الكونكريت:</b> ${t.pourType || 'C30'} | <b>كمية:</b> ${t.quantity || '-'} | <b>سعر:</b> ${t.price ? window.formatCurr(t.price) : '-'}<br>` : ''}
                                         ${t.note || '-'}
                                     </td>
                                     <td class="border-2 border-black p-3 font-black">${t.type === 'debt' ? 'عملية صب (+)' : 'عملية تسديد (-)'}</td>
@@ -1739,6 +1825,20 @@
         window.printGlobalReport = function() {
             const todayStr = new Date().toISOString().split('T')[0];
             document.getElementById('printSignCustomer').innerText = `توقيع المدير / المسؤول: ....................................`;
+            
+            const logoSvg = `<svg width="70" height="70" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg" style="display:block; margin: 0 auto 8px auto;">
+                <path d="M250 35 L450 150 L450 350 L250 465 L50 350 L50 150 Z" fill="none" stroke="#334155" stroke-width="24"/>
+                <polygon points="250,160 340,210 340,310 250,360 160,310 160,210" fill="#0d9488"/>
+                <g fill="#334155">
+                    <circle cx="410" cy="180" r="14"/><circle cx="430" cy="220" r="12"/><circle cx="395" cy="235" r="16"/>
+                    <circle cx="420" cy="275" r="15"/><circle cx="390" cy="300" r="13"/><circle cx="440" cy="330" r="11"/>
+                    <circle cx="360" cy="340" r="14"/><circle cx="390" cy="370" r="12"/><circle cx="335" cy="375" r="15"/>
+                    <circle cx="280" cy="415" r="12"/><circle cx="250" cy="445" r="14"/><circle cx="215" cy="415" r="13"/>
+                    <circle cx="185" cy="435" r="11"/><circle cx="150" cy="410" r="15"/><circle cx="125" cy="430" r="12"/>
+                    <circle cx="95" cy="395" r="14"/><circle cx="70" cy="370" r="13"/>
+                </g>
+            </svg>`;
+
             const printBody = document.getElementById('printBody');
             let rows = '';
 
@@ -1752,7 +1852,7 @@
                     <tr class="font-bold text-black text-sm">
                         <td class="border-2 border-black p-3 text-center font-black">${i + 1}</td>
                         <td class="border-2 border-black p-3 font-black text-base">${cust.name}</td>
-                        <td class="border-2 border-black p-3 font-mono">${cust.phone}</td>
+                        <td class="border-2 border-black p-3 font-mono">077301508888</td>
                         <td class="border-2 border-black p-3">${cust.address || '-'}</td>
                         <td class="border-2 border-black p-3">${window.formatCurr(debtSum)}</td>
                         <td class="border-2 border-black p-3">${window.formatCurr(paySum)}</td>
@@ -1763,6 +1863,7 @@
 
             printBody.innerHTML = `
                 <div class="text-center border-b-4 border-black pb-4 mb-6 space-y-1">
+                    ${logoSvg}
                     <h1 class="text-4xl font-black text-black">معامل القالب للكونكريت</h1>
                     <h2 class="text-2xl font-black text-black">قسم الحسابات</h2>
                     <p class="text-sm font-black text-black pt-2">تقرير وسجل الحسابات لكافة الزبائن - تاريخ الطباعة: ${todayStr}</p>

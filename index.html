@@ -269,7 +269,7 @@
             <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl p-6 shadow-xl space-y-6">
                 <div>
                     <h2 class="text-xl font-black text-white mb-1">مركز الاتصالات والإجراءات المباشرة</h2>
-                    <p class="text-sm text-slate-300 font-semibold">ابحث عن الزبون لتنفيذ عمليات إضافة دين، تسديد، أو تدوين المكالمات المباشرة</p>
+                    <p class="text-sm text-slate-300 font-semibold">ابحث عن الزبون لتنفيذ عمليات إضافة صب، تسديد، أو تدوين المكالمات المباشرة</p>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-4">
@@ -299,7 +299,7 @@
 
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <button onclick="openAddDebtModal()" class="bg-rose-600 hover:bg-rose-700 text-white font-black text-base p-4 rounded-xl flex items-center justify-center gap-2 transition shadow-lg">
-                            <i class="fa-solid fa-file-circle-plus text-xl"></i> إضافة دين / صب جديد
+                            <i class="fa-solid fa-truck-ramp-box text-xl"></i> إضافة صب جديد
                         </button>
                         <button onclick="openPayDebtModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-base p-4 rounded-xl flex items-center justify-center gap-2 transition shadow-lg">
                             <i class="fa-solid fa-receipt text-xl"></i> تسديد دين وطباعة وصل
@@ -449,9 +449,9 @@
                 <div>
                     <label class="block text-slate-300 mb-1">تصفية حسب نوع الحركة:</label>
                     <select id="detailTypeFilter" onchange="renderCustomerDetailsContent()" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-amber-500">
-                        <option value="all">كافة الحركات (تسديد + صب/ديون)</option>
+                        <option value="all">كافة الحركات (تسديد + صب)</option>
                         <option value="pay">عمليات التسديد فقط</option>
-                        <option value="debt">عمليات الصب والدين فقط</option>
+                        <option value="debt">عمليات الصب فقط</option>
                         <option value="calls">سجل الاتصالات والاتفاقات فقط</option>
                     </select>
                 </div>
@@ -483,29 +483,43 @@
         </div>
     </div>
 
-    <!-- Add Debt / Pouring Modal -->
+    <!-- Add Pour Modal (Updated from Add Debt Modal) -->
     <div id="addDebtModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4 no-print">
         <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-                <h3 class="text-xl font-black text-white">إضافة حركة صب / دين جديد</h3>
+                <h3 class="text-xl font-black text-white">إضافة عملية صب جديدة</h3>
                 <button onclick="toggleModal('addDebtModal', false)" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
             </div>
             <form onsubmit="handleAddDebt(event)" class="space-y-4 text-base font-bold">
                 <div>
-                    <label class="block text-sm text-slate-300 mb-1">تاريخ العملية</label>
+                    <label class="block text-sm text-slate-300 mb-1">تاريخ الصب *</label>
                     <input type="date" id="debtDate" required class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white">
                 </div>
                 <div>
-                    <label class="block text-sm text-slate-300 mb-1">المبلغ (د.ع) *</label>
-                    <input type="number" id="debtAmount" min="1" required class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white">
+                    <label class="block text-sm text-slate-300 mb-1">نوع الصب *</label>
+                    <input type="text" id="pourType" placeholder="مثال: صب أسس، صب سقف، صب أرضية..." required class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-slate-300 mb-1">كمية الصب (م³ أو عدد) *</label>
+                        <input type="number" id="pourQuantity" step="any" min="0.01" required oninput="calculatePourTotal()" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-slate-300 mb-1">سعر الصب (للوحدة) *</label>
+                        <input type="number" id="pourPrice" step="any" min="0" required oninput="calculatePourTotal()" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white">
+                    </div>
+                </div>
+                <div class="bg-slate-900 p-3 rounded-xl border border-slate-700 flex justify-between items-center">
+                    <span class="text-sm text-slate-300">المبلغ الإجمالي للصب:</span>
+                    <span class="text-lg font-black text-amber-400" id="pourTotalDisplay">0 د.ع</span>
                 </div>
                 <div>
-                    <label class="block text-sm text-slate-300 mb-1">تفاصيل صب الخرسانة / البيان</label>
-                    <input type="text" id="debtNote" placeholder="مثال: وجبة صب أسس - خلاطة رقم 3" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white">
+                    <label class="block text-sm text-slate-300 mb-1">الملاحظات</label>
+                    <textarea id="debtNote" rows="2" placeholder="ملاحظات إضافية حول عملية الصب..." class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white"></textarea>
                 </div>
                 <div class="pt-3 flex justify-end gap-3">
                     <button type="button" onclick="toggleModal('addDebtModal', false)" class="px-5 py-2.5 bg-slate-700 text-slate-200 rounded-xl font-bold">إلغاء</button>
-                    <button type="submit" class="px-6 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl shadow-md">إضافة عملية الصب</button>
+                    <button type="submit" class="px-6 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl shadow-md">حفظ وإضافة الصب</button>
                 </div>
             </form>
         </div>
@@ -687,7 +701,7 @@
             return Number(num || 0).toLocaleString('ar-IQ') + ' د.ع';
         };
 
-        // ================= Tab 1: Overview =================
+        // ================= Tab 1: Overview (تمت مراجعة ودقيق الدوال لتطابق مجموع الزبائن 100%) =================
         function renderOverview() {
             let totalRemaining = 0;
             let totalOriginal = 0;
@@ -699,6 +713,7 @@
             const currentMonth = now.getMonth();
             let monthCollected = 0;
 
+            // حساب تحصيلات الشهر الحالي
             window.transactions.forEach(t => {
                 const tDate = new Date(t.date);
                 if (t.type === 'pay') {
@@ -716,6 +731,7 @@
             const overviewSearch = (document.getElementById('overviewSearchInput')?.value || '').toLowerCase().trim();
             const overviewFilter = document.getElementById('overviewFilterType')?.value || 'all';
 
+            // التدقيق والمطابقة التامة: تجميع الديون عبر المرور على كافة الزبائن تماماً مثل جدول الزبائن
             window.customers.forEach(cust => {
                 const custTrans = window.transactions.filter(t => t.customerId === cust.id);
                 const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
@@ -725,12 +741,12 @@
                 totalOriginal += debtSum;
                 totalRemaining += remaining;
 
+                // فحص التنبيهات ومواعيد الاتصال الاستحقاقية للزبائن الذين لديهم مبالغ متبقية
                 const custCalls = window.calls.filter(c => c.customerId === cust.id && c.targetDate);
                 custCalls.forEach(c => {
                     if (remaining > 0 && c.targetDate <= todayStr) {
                         const isLate = c.targetDate < todayStr;
 
-                        // Apply filters
                         if (overviewFilter === 'late' && !isLate) return;
                         if (overviewFilter === 'today' && isLate) return;
 
@@ -848,6 +864,7 @@
                                 type: 'debt',
                                 date: todayStr,
                                 amount: diffDebt,
+                                pourType: 'تسوية صب',
                                 note: 'تسوية وتعديل المبلغ الكلي يدويأ'
                             });
                         }
@@ -889,6 +906,7 @@
                             type: 'debt',
                             date: todayStr,
                             amount: initialTotal,
+                            pourType: 'رصيد ابتدائي',
                             note: 'رصيد صب/دين ابتدائي'
                         });
                     }
@@ -920,15 +938,27 @@
                 return;
             }
 
-            if (confirm(`هل أنت متأكد من حذف الزبون (${cust.name}) وكافة ديونه وسجلاته نهائياً؟`)) {
+            if (confirm(`هل أنت متأكد من حذف الزبون (${cust.name}) وكافة مبالغه، ديونه، وسجلاته نهائياً؟`)) {
                 remove(ref(db, 'qaleb_debts/customers/' + custID));
+                
                 window.transactions.forEach(t => {
-                    if (t.customerId === custID) remove(ref(db, 'qaleb_debts/transactions/' + t.id));
+                    if (t.customerId === custID) {
+                        remove(ref(db, 'qaleb_debts/transactions/' + t.id));
+                    }
                 });
+
                 window.calls.forEach(c => {
-                    if (c.customerId === custID) remove(ref(db, 'qaleb_debts/calls/' + c.id));
+                    if (c.customerId === custID) {
+                        remove(ref(db, 'qaleb_debts/calls/' + c.id));
+                    }
                 });
-                alert("تم الحذف بنجاح.");
+
+                if (window.selectedCustomerId === custID) {
+                    window.selectedCustomerId = null;
+                    document.getElementById('selectedCustomerCard').classList.add('hidden');
+                }
+
+                alert("تم حذف الزبون وكافة المبالغ والبيانات الخاصة به بنجاح، وتصحيح مجاميع النظام.");
             }
         };
 
@@ -955,7 +985,6 @@
                 return true;
             });
 
-            // Sorting
             list.sort((a, b) => {
                 const aTrans = window.transactions.filter(t => t.customerId === a.id);
                 const aRem = aTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0) - aTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
@@ -1131,6 +1160,7 @@
                                         type: 'debt',
                                         date: todayStr,
                                         amount: initialDebt,
+                                        pourType: 'رصيد مستورد',
                                         note: 'رصيد مستورد'
                                     });
                                 }
@@ -1225,23 +1255,47 @@
 
             document.getElementById('actionCustName').innerText = cust.name;
             document.getElementById('actionCustPhone').innerText = `رقم الهاتف: ${cust.phone} | العنوان: ${cust.address || 'غير محدد'}`;
-            document.getElementById('actionCustTotal').innerText = `إجمالي الصب/الديون: ` + window.formatCurr(debtSum);
+            document.getElementById('actionCustTotal').innerText = `إجمالي الصب: ` + window.formatCurr(debtSum);
             document.getElementById('actionCustRemaining').innerText = `المتبقي: ` + window.formatCurr(remaining);
         };
 
-        window.openAddDebtModal = function() { if (window.selectedCustomerId) window.toggleModal('addDebtModal', true); };
+        window.openAddDebtModal = function() { 
+            if (window.selectedCustomerId) {
+                document.getElementById('pourType').value = '';
+                document.getElementById('pourQuantity').value = '';
+                document.getElementById('pourPrice').value = '';
+                document.getElementById('pourTotalDisplay').innerText = '0 د.ع';
+                document.getElementById('debtNote').value = '';
+                window.toggleModal('addDebtModal', true); 
+            }
+        };
+
+        window.calculatePourTotal = function() {
+            const qty = Number(document.getElementById('pourQuantity').value) || 0;
+            const price = Number(document.getElementById('pourPrice').value) || 0;
+            const total = qty * price;
+            document.getElementById('pourTotalDisplay').innerText = window.formatCurr(total);
+        };
+
         window.openPayDebtModal = function() { if (window.selectedCustomerId) window.toggleModal('payDebtModal', true); };
         window.openCallModal = function() { if (window.selectedCustomerId) window.toggleModal('callModal', true); };
 
         window.handleAddDebt = function(e) {
             e.preventDefault();
+            const qty = Number(document.getElementById('pourQuantity').value) || 0;
+            const price = Number(document.getElementById('pourPrice').value) || 0;
+            const totalAmount = qty * price;
+
             const trxId = 'TRX_' + Date.now();
             const newTrx = {
                 id: trxId,
                 customerId: window.selectedCustomerId,
                 type: 'debt',
                 date: document.getElementById('debtDate').value,
-                amount: Number(document.getElementById('debtAmount').value),
+                amount: totalAmount,
+                pourType: document.getElementById('pourType').value.trim(),
+                quantity: qty,
+                price: price,
                 note: document.getElementById('debtNote').value.trim()
             };
 
@@ -1430,7 +1484,7 @@
 
             let htmlContent = `
                 <div class="flex flex-wrap justify-between items-center bg-slate-900 p-4 rounded-xl border border-slate-700 text-sm font-black gap-2 shadow-inner">
-                    <span class="text-slate-200">إجمالي عمليات الصب والديون: <b class="text-rose-400 text-base">${window.formatCurr(totalDebt)}</b></span>
+                    <span class="text-slate-200">إجمالي عمليات الصب: <b class="text-rose-400 text-base">${window.formatCurr(totalDebt)}</b></span>
                     <span class="text-slate-200">إجمالي عمليات التسديد: <b class="text-emerald-400 text-base">${window.formatCurr(totalPay)}</b></span>
                     <span class="text-slate-200">الرصيد المتبقي الإجمالي: <b class="${overallRemaining > 0 ? 'text-amber-400' : 'text-slate-300'} text-base">${window.formatCurr(overallRemaining)}</b></span>
                 </div>
@@ -1447,7 +1501,7 @@
                                         <th class="p-3">التسلسل</th>
                                         <th class="p-3">التاريخ</th>
                                         <th class="p-3">نوع الحركة</th>
-                                        <th class="p-3">البيان / التفاصيل</th>
+                                        <th class="p-3">تفاصيل الصب / البيان</th>
                                         <th class="p-3">المبلغ</th>
                                         <th class="p-3 text-amber-400">المتبقي بعد الحركة</th>
                                         <th class="p-3 text-center">طباعة مخصصة</th>
@@ -1460,9 +1514,12 @@
                                             <td class="p-3 font-black text-slate-400">${idx + 1}</td>
                                             <td class="p-3 font-mono font-bold">${t.date}</td>
                                             <td class="p-3 font-black ${t.type === 'debt' ? 'text-rose-400' : 'text-emerald-400'}">
-                                                ${t.type === 'debt' ? 'عملية صب / دين (+)' : 'عملية تسديد (-)'}
+                                                ${t.type === 'debt' ? 'عملية صب (+)' : 'عملية تسديد (-)'}
                                             </td>
-                                            <td class="p-3 text-slate-200 font-semibold">${t.note || '-'}</td>
+                                            <td class="p-3 text-slate-200 font-semibold">
+                                                ${t.type === 'debt' ? `<b>النوع:</b> ${t.pourType || 'صب'} | <b>الكمية:</b> ${t.quantity || '-'} | <b>السعر:</b> ${t.price ? window.formatCurr(t.price) : '-'}<br>` : ''}
+                                                <b>ملاحظات:</b> ${t.note || '-'}
+                                            </td>
                                             <td class="p-3 font-black text-white">${window.formatCurr(t.amount)}</td>
                                             <td class="p-3 font-black text-amber-400">${window.formatCurr(balanceMap[t.id])}</td>
                                             <td class="p-3 text-center">
@@ -1540,7 +1597,7 @@
 
             document.getElementById('printSignCustomer').innerText = `توقيع الزبون (${cust.name}): ....................................`;
 
-            const docType = trx.type === 'pay' ? 'وصل تسديد ومقبوضات' : 'وصل عملية صب / دين';
+            const docType = trx.type === 'pay' ? 'وصل تسديد ومقبوضات' : 'وصل عملية صب خرسانة';
             const printBody = document.getElementById('printBody');
 
             printBody.innerHTML = `
@@ -1551,7 +1608,7 @@
                         <thead>
                             <tr class="bg-gray-200 text-black font-black text-sm">
                                 <th class="border-2 border-black p-3 text-center">التسلسل</th>
-                                <th class="border-2 border-black p-3">تفاصيل الحركة (البيان)</th>
+                                <th class="border-2 border-black p-3">تفاصيل الصب / البيان</th>
                                 <th class="border-2 border-black p-3">نوع الحركة</th>
                                 <th class="border-2 border-black p-3">المبلغ</th>
                                 <th class="border-2 border-black p-3">المبلغ المتبقي</th>
@@ -1560,9 +1617,12 @@
                         <tbody>
                             <tr class="text-black font-black text-base">
                                 <td class="border-2 border-black p-3.5 text-center">1</td>
-                                <td class="border-2 border-black p-3.5">${trx.note || docType}</td>
                                 <td class="border-2 border-black p-3.5">
-                                    ${trx.type === 'debt' ? 'عملية صب / دين (+)' : 'عملية تسديد (-)'}
+                                    ${trx.type === 'debt' ? `<b>نوع الصب:</b> ${trx.pourType || 'صب'} | <b>الكمية:</b> ${trx.quantity || '-'} | <b>السعر:</b> ${trx.price ? window.formatCurr(trx.price) : '-'}<br>` : ''}
+                                    <b>ملاحظات:</b> ${trx.note || docType}
+                                </td>
+                                <td class="border-2 border-black p-3.5">
+                                    ${trx.type === 'debt' ? 'عملية صب (+)' : 'عملية تسديد (-)'}
                                 </td>
                                 <td class="border-2 border-black p-3.5">${window.formatCurr(trx.amount)}</td>
                                 <td class="border-2 border-black p-3.5 font-black">${window.formatCurr(currentBalAtTrx)}</td>
@@ -1629,7 +1689,7 @@
 
             let docTypeTitle = 'كشف حساب تفصيلي كامل';
             if (typeFilter === 'pay') docTypeTitle = 'كشف عمليات التسديد والمقبوضات';
-            if (typeFilter === 'debt') docTypeTitle = 'كشف عمليات الصب والديون';
+            if (typeFilter === 'debt') docTypeTitle = 'كشف عمليات الصب';
 
             const printBody = document.getElementById('printBody');
             printBody.innerHTML = `
@@ -1640,7 +1700,7 @@
                             <tr class="bg-gray-200 text-black font-black text-sm">
                                 <th class="border-2 border-black p-3 text-center">التسلسل</th>
                                 <th class="border-2 border-black p-3">التاريخ</th>
-                                <th class="border-2 border-black p-3">تفاصيل الحركة (البيان)</th>
+                                <th class="border-2 border-black p-3">تفاصيل الصب / البيان</th>
                                 <th class="border-2 border-black p-3">نوع الحركة</th>
                                 <th class="border-2 border-black p-3">المبلغ</th>
                                 <th class="border-2 border-black p-3">المبلغ المتبقي</th>
@@ -1651,8 +1711,11 @@
                                 <tr>
                                     <td class="border-2 border-black p-3 text-center font-black">${i + 1}</td>
                                     <td class="border-2 border-black p-3 font-mono">${t.date}</td>
-                                    <td class="border-2 border-black p-3">${t.note || '-'}</td>
-                                    <td class="border-2 border-black p-3 font-black">${t.type === 'debt' ? 'عملية صب / دين (+)' : 'عملية تسديد (-)'}</td>
+                                    <td class="border-2 border-black p-3">
+                                        ${t.type === 'debt' ? `<b>نوع:</b> ${t.pourType || 'صب'} | <b>كمية:</b> ${t.quantity || '-'} | <b>سعر:</b> ${t.price ? window.formatCurr(t.price) : '-'}<br>` : ''}
+                                        ${t.note || '-'}
+                                    </td>
+                                    <td class="border-2 border-black p-3 font-black">${t.type === 'debt' ? 'عملية صب (+)' : 'عملية تسديد (-)'}</td>
                                     <td class="border-2 border-black p-3 font-black">${window.formatCurr(t.amount)}</td>
                                     <td class="border-2 border-black p-3 font-black">${window.formatCurr(balanceMap[t.id])}</td>
                                 </tr>
@@ -1661,7 +1724,7 @@
                     </table>
 
                     <div class="flex justify-between items-center bg-gray-100 p-4 rounded-lg border-2 border-black text-sm font-black mt-4">
-                        <p>مجموع الصب/الديون: ${window.formatCurr(totalDebt)}</p>
+                        <p>مجموع الصب: ${window.formatCurr(totalDebt)}</p>
                         <p>مجموع المسدد: ${window.formatCurr(totalPay)}</p>
                         <p class="text-base text-black underline">إجمالي الرصيد المتبقي الحالي: ${window.formatCurr(remaining)}</p>
                     </div>
@@ -1702,7 +1765,7 @@
                 <div class="text-center border-b-4 border-black pb-4 mb-6 space-y-1">
                     <h1 class="text-4xl font-black text-black">معامل القالب للكونكريت</h1>
                     <h2 class="text-2xl font-black text-black">قسم الحسابات</h2>
-                    <p class="text-sm font-black text-black pt-2">تقرير وسجل ديون لكافة الزبائن - تاريخ الطباعة: ${todayStr}</p>
+                    <p class="text-sm font-black text-black pt-2">تقرير وسجل الحسابات لكافة الزبائن - تاريخ الطباعة: ${todayStr}</p>
                 </div>
                 <div class="space-y-4 text-black text-sm">
                     <table class="w-full text-right border-collapse border-2 border-black">

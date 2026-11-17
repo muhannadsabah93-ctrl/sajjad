@@ -121,9 +121,9 @@
 
                 <div class="bg-slate-800 border-2 border-slate-700 p-6 rounded-2xl shadow-xl flex items-center justify-between sm:col-span-2 lg:col-span-1">
                     <div>
-                        <p class="text-sm text-slate-300 font-extrabold mb-1">مستحقات اليوم المتأخرة/الحالية</p>
+                        <p class="text-sm text-slate-300 font-extrabold mb-1">مستحقات التنبيهات المفلترة</p>
                         <h3 class="text-3xl font-black text-rose-400" id="statDueToday">0 د.ع</h3>
-                        <p class="text-xs text-slate-400 mt-2 font-bold" id="statDueCount">عدد الزبائن المستحقين: 0</p>
+                        <p class="text-xs text-slate-400 mt-2 font-bold" id="statDueCount">عدد الزبائن المطابقين: 0</p>
                     </div>
                     <div class="w-14 h-14 bg-rose-500/20 text-rose-400 rounded-2xl flex items-center justify-center text-2xl border border-rose-500/40">
                         <i class="fa-solid fa-bell font-bold"></i>
@@ -174,16 +174,22 @@
 
                 <!-- Customer Search & Filter Bar -->
                 <div class="flex flex-wrap items-center gap-4 bg-slate-900 p-4 rounded-xl border border-slate-700">
-                    <div class="flex-1 min-w-[240px] relative">
+                    <div class="flex-1 min-w-[220px] relative">
                         <i class="fa-solid fa-magnifying-glass absolute right-4 top-3.5 text-slate-400"></i>
                         <input type="text" id="custSearchInput" oninput="renderCustomersTable()" placeholder="ابحث باسم الزبون، رقم الهاتف، أو العنوان..." class="w-full bg-slate-800 border border-slate-700 rounded-xl pr-11 pl-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
                     </div>
                     <div>
-                        <select id="custFilterBalance" onchange="renderCustomersTable()" class="bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
+                        <select id="custFilterBalance" onchange="toggleCustDateInput(); renderCustomersTable()" class="bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
                             <option value="all">كافة الزبائن</option>
+                            <option value="date_updated">⚡ المحدثون أو المضافون في تاريخ معين</option>
                             <option value="debtors">الزبائن أصحاب الديون المتبقية فقط</option>
                             <option value="cleared">الزبائن المسددين بالكامل (رصفر)</option>
                         </select>
+                    </div>
+                    <!-- Date Picker for Filter -->
+                    <div id="custDateFilterContainer" class="hidden flex items-center gap-2">
+                        <span class="text-xs text-amber-400 font-bold">اختر التاريخ:</span>
+                        <input type="date" id="custTargetDateInput" onchange="renderCustomersTable()" class="bg-slate-800 border border-amber-500/60 rounded-xl px-3 py-2 text-sm font-bold text-white focus:outline-none">
                     </div>
                     <div>
                         <select id="custSortOrder" onchange="renderCustomersTable()" class="bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
@@ -317,36 +323,31 @@
 
         <!-- Tab 4: Logs Summary Table -->
         <section id="sec-logs" class="tab-content hidden space-y-6">
-            <!-- Summary Stats Cards at the Top of Logs -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div class="bg-slate-800 border-2 border-slate-700 p-5 rounded-2xl shadow-xl flex items-center justify-between">
-                    <div>
-                        <p class="text-xs text-slate-300 font-extrabold mb-1">مجموع المبالغ لكل الزبائن (الكلي)</p>
-                        <h3 class="text-2xl font-black text-rose-400" id="logsStatTotalOriginal">0 د.ع</h3>
-                    </div>
-                    <div class="w-12 h-12 bg-rose-500/20 text-rose-400 rounded-xl flex items-center justify-center text-xl border border-rose-500/40">
-                        <i class="fa-solid fa-file-invoice-dollar"></i>
-                    </div>
+            <!-- Summary Stats Cards at the Top of Logs (Dependent on Filtering) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                <div class="bg-slate-800 border-2 border-slate-700 p-4 rounded-2xl shadow-xl flex flex-col justify-between">
+                    <p class="text-xs text-slate-300 font-extrabold mb-1">إجمالي المبالغ (للفلترة)</p>
+                    <h3 class="text-xl font-black text-rose-400" id="logsStatTotalOriginal">0 د.ع</h3>
                 </div>
-
-                <div class="bg-slate-800 border-2 border-slate-700 p-5 rounded-2xl shadow-xl flex items-center justify-between">
-                    <div>
-                        <p class="text-xs text-slate-300 font-extrabold mb-1">مجموع المبالغ المسددة</p>
-                        <h3 class="text-2xl font-black text-emerald-400" id="logsStatTotalPaid">0 د.ع</h3>
-                    </div>
-                    <div class="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-xl flex items-center justify-center text-xl border border-emerald-500/40">
-                        <i class="fa-solid fa-circle-check"></i>
-                    </div>
+                <div class="bg-slate-800 border-2 border-slate-700 p-4 rounded-2xl shadow-xl flex flex-col justify-between">
+                    <p class="text-xs text-slate-300 font-extrabold mb-1">المبالغ المسددة (للفلترة)</p>
+                    <h3 class="text-xl font-black text-emerald-400" id="logsStatTotalPaid">0 د.ع</h3>
                 </div>
-
-                <div class="bg-slate-800 border-2 border-slate-700 p-5 rounded-2xl shadow-xl flex items-center justify-between">
-                    <div>
-                        <p class="text-xs text-slate-300 font-extrabold mb-1">مجموع الديون المتبقية</p>
-                        <h3 class="text-2xl font-black text-amber-400" id="logsStatTotalRemaining">0 د.ع</h3>
-                    </div>
-                    <div class="w-12 h-12 bg-amber-500/20 text-amber-400 rounded-xl flex items-center justify-center text-xl border border-amber-500/40">
-                        <i class="fa-solid fa-wallet"></i>
-                    </div>
+                <div class="bg-slate-800 border-2 border-slate-700 p-4 rounded-2xl shadow-xl flex flex-col justify-between">
+                    <p class="text-xs text-slate-300 font-extrabold mb-1">الديون المتبقية (للفلترة)</p>
+                    <h3 class="text-xl font-black text-amber-400" id="logsStatTotalRemaining">0 د.ع</h3>
+                </div>
+                <div class="bg-slate-900 border-2 border-emerald-500/40 p-4 rounded-2xl shadow-xl flex flex-col justify-between">
+                    <p class="text-xs text-emerald-400 font-extrabold mb-1">💵 المسدد بالتاريخ المحدد</p>
+                    <h3 class="text-xl font-black text-emerald-300" id="logsStatTodayPaid">0 د.ع</h3>
+                </div>
+                <div class="bg-slate-900 border-2 border-rose-500/40 p-4 rounded-2xl shadow-xl flex flex-col justify-between">
+                    <p class="text-xs text-rose-400 font-extrabold mb-1">🏗️ الصب بالتاريخ المحدد</p>
+                    <h3 class="text-xl font-black text-rose-300" id="logsStatTodayDebt">0 د.ع</h3>
+                </div>
+                <div class="bg-slate-900 border-2 border-amber-500/40 p-4 rounded-2xl shadow-xl flex flex-col justify-between">
+                    <p class="text-xs text-amber-400 font-extrabold mb-1">📊 إجمالي مبالغ التاريخ</p>
+                    <h3 class="text-xl font-black text-amber-300" id="logsStatTodayTotal">0 د.ع</h3>
                 </div>
             </div>
 
@@ -363,16 +364,22 @@
 
                 <!-- Logs Search & Filter Bar -->
                 <div class="flex flex-wrap items-center gap-4 bg-slate-900 p-4 rounded-xl border border-slate-700">
-                    <div class="flex-1 min-w-[240px] relative">
+                    <div class="flex-1 min-w-[220px] relative">
                         <i class="fa-solid fa-magnifying-glass absolute right-4 top-3.5 text-slate-400"></i>
                         <input type="text" id="logsSearchInput" oninput="renderLogsSummaryTable()" placeholder="بحث في السجلات (الاسم، الهاتف، أو العنوان)..." class="w-full bg-slate-800 border border-slate-700 rounded-xl pr-11 pl-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
                     </div>
                     <div>
-                        <select id="logsFilterBalance" onchange="renderLogsSummaryTable()" class="bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
+                        <select id="logsFilterBalance" onchange="toggleLogsDateInput(); renderLogsSummaryTable()" class="bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
                             <option value="all">كافة السجلات</option>
+                            <option value="date_updated">⚡ السجلات المحدثة في تاريخ معين</option>
                             <option value="debtors">الذين لديهم ديون متبقية فقط</option>
                             <option value="cleared">المسددون بالكامل فقط</option>
                         </select>
+                    </div>
+                    <!-- Date Picker for Logs Filter -->
+                    <div id="logsDateFilterContainer" class="hidden flex items-center gap-2">
+                        <span class="text-xs text-amber-400 font-bold">اختر التاريخ:</span>
+                        <input type="date" id="logsTargetDateInput" onchange="renderLogsSummaryTable()" class="bg-slate-800 border border-amber-500/60 rounded-xl px-3 py-2 text-sm font-bold text-white focus:outline-none">
                     </div>
                     <div>
                         <select id="logsSortOrder" onchange="renderLogsSummaryTable()" class="bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
@@ -428,7 +435,7 @@
                     <input type="text" id="custAddress" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-amber-500">
                 </div>
                 
-                <!-- Initial Financials (Only shown when adding new customer) -->
+                <!-- Initial Financials -->
                 <div id="initialFinancialsContainer" class="grid grid-cols-2 gap-4 bg-slate-900 p-4 rounded-xl border border-slate-700">
                     <div>
                         <label class="block text-xs text-rose-400 mb-1">المبلغ الكلي (الدين الأولي) (د.ع)</label>
@@ -440,7 +447,7 @@
                     </div>
                 </div>
 
-                <!-- Editable Financials (Only shown when editing existing customer) -->
+                <!-- Editable Financials -->
                 <div id="editFinancialsContainer" class="hidden grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-900 p-4 rounded-xl border border-slate-700 text-sm">
                     <div>
                         <label class="block text-xs text-rose-400 mb-1">المبلغ الكلي (د.ع)</label>
@@ -462,7 +469,7 @@
                 </div>
                 <div class="pt-3 flex justify-end gap-3">
                     <button type="button" onclick="toggleModal('customerModal', false)" class="px-5 py-2.5 bg-slate-700 text-slate-200 rounded-xl font-bold">إلغاء</button>
-                    <button type="submit" class="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl shadow-md">حفظ البيانات</button>
+                    <button type="submit" id="saveCustomerBtn" class="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl shadow-md">حفظ البيانات</button>
                 </div>
             </form>
         </div>
@@ -569,7 +576,7 @@
                 </div>
                 <div class="pt-3 flex justify-end gap-3">
                     <button type="button" onclick="toggleModal('addDebtModal', false)" class="px-5 py-2.5 bg-slate-700 text-slate-200 rounded-xl font-bold">إلغاء</button>
-                    <button type="submit" class="px-6 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl shadow-md">حفظ وإضافة الصب</button>
+                    <button type="submit" id="addDebtSubmitBtn" class="px-6 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl shadow-md">حفظ وإضافة الصب</button>
                 </div>
             </form>
         </div>
@@ -597,7 +604,7 @@
                 </div>
                 <div class="pt-3 flex justify-end gap-3">
                     <button type="button" onclick="toggleModal('payDebtModal', false)" class="px-5 py-2.5 bg-slate-700 text-slate-200 rounded-xl font-bold">إلغاء</button>
-                    <button type="submit" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl shadow-md">تسديد وطباعة وصل</button>
+                    <button type="submit" id="payDebtSubmitBtn" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl shadow-md">تسديد وطباعة وصل</button>
                 </div>
             </form>
         </div>
@@ -628,7 +635,7 @@
                 </div>
                 <div class="pt-3 flex justify-end gap-3">
                     <button type="button" onclick="toggleModal('callModal', false)" class="px-5 py-2.5 bg-slate-700 text-slate-200 rounded-xl font-bold">إلغاء</button>
-                    <button type="submit" class="px-6 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-black rounded-xl shadow-md">حفظ المكالمة</button>
+                    <button type="submit" id="callSubmitBtn" class="px-6 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-black rounded-xl shadow-md">حفظ المكالمة</button>
                 </div>
             </form>
         </div>
@@ -678,6 +685,8 @@
             const todayStr = new Date().toISOString().split('T')[0];
             document.getElementById('debtDate').value = todayStr;
             document.getElementById('payDate').value = todayStr;
+            document.getElementById('custTargetDateInput').value = todayStr;
+            document.getElementById('logsTargetDateInput').value = todayStr;
             document.getElementById('currentDateDisplay').innerText = new Date().toLocaleDateString('ar-IQ', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             
             initFirebaseListeners();
@@ -725,20 +734,26 @@
         };
 
         window.switchTab = function(tabName) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.tab-btn').forEach(el => {
-                el.classList.remove('border-b-4', 'border-amber-500', 'text-amber-400');
-                el.classList.add('text-slate-300');
+            requestAnimationFrame(() => {
+                document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+                document.querySelectorAll('.tab-btn').forEach(el => {
+                    el.classList.remove('border-b-4', 'border-amber-500', 'text-amber-400');
+                    el.classList.add('text-slate-300');
+                });
+
+                const targetSec = document.getElementById('sec-' + tabName);
+                if (targetSec) targetSec.classList.remove('hidden');
+
+                const activeBtn = document.getElementById('tab-' + tabName);
+                if (activeBtn) {
+                    activeBtn.classList.add('border-b-4', 'border-amber-500', 'text-amber-400');
+                    activeBtn.classList.remove('text-slate-300');
+                }
+
+                if (tabName === 'overview') renderOverview();
+                if (tabName === 'customers') renderCustomersTable();
+                if (tabName === 'logs') renderLogsSummaryTable();
             });
-
-            document.getElementById('sec-' + tabName).classList.remove('hidden');
-            const activeBtn = document.getElementById('tab-' + tabName);
-            activeBtn.classList.add('border-b-4', 'border-amber-500', 'text-amber-400');
-            activeBtn.classList.remove('text-slate-300');
-
-            if (tabName === 'overview') renderOverview();
-            if (tabName === 'customers') renderCustomersTable();
-            if (tabName === 'logs') renderLogsSummaryTable();
         };
 
         window.toggleModal = function(id, show) {
@@ -836,7 +851,7 @@
             document.getElementById('statTotalOriginal').innerText = `إجمالي الديون الأصلية: ` + window.formatCurr(totalOriginal);
             document.getElementById('statMonthCollected').innerText = window.formatCurr(monthCollected);
             document.getElementById('statDueToday').innerText = window.formatCurr(dueTodayAmount);
-            document.getElementById('statDueCount').innerText = `عدد الزبائن المستحقين: ${dueTodayCount}`;
+            document.getElementById('statDueCount').innerText = `عدد الزبائن المطابقين: ${dueTodayCount}`;
             document.getElementById('alertsBadge').innerText = `${alertCount} تنبيهات`;
         }
 
@@ -884,11 +899,16 @@
 
         window.handleSaveCustomer = function(e) {
             e.preventDefault();
+            const submitBtn = document.getElementById('saveCustomerBtn');
+            if (submitBtn.disabled) return;
+            submitBtn.disabled = true;
+
             const editId = document.getElementById('editCustId').value;
             const name = document.getElementById('custName').value.trim();
             const phone = document.getElementById('custPhone').value.trim();
             const address = document.getElementById('custAddress').value.trim();
             const notes = document.getElementById('custNotes').value.trim();
+            const todayStr = new Date().toISOString().split('T')[0];
 
             if (editId) {
                 update(ref(db, 'qaleb_debts/customers/' + editId), { name, phone, address, notes })
@@ -900,12 +920,11 @@
                         const oldDebtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
                         const oldPaySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
 
-                        const todayStr = new Date().toISOString().split('T')[0];
-
+                        let promises = [];
                         if (newTotal !== oldDebtSum) {
                             const diffDebt = newTotal - oldDebtSum;
                             const trxId = 'TRX_ADJ_DEBT_' + Date.now();
-                            set(ref(db, 'qaleb_debts/transactions/' + trxId), {
+                            promises.push(set(ref(db, 'qaleb_debts/transactions/' + trxId), {
                                 id: trxId,
                                 customerId: editId,
                                 type: 'debt',
@@ -913,28 +932,33 @@
                                 amount: diffDebt,
                                 pourType: 'C30',
                                 note: 'تسوية وتعديل المبلغ الكلي يدويأ'
-                            });
+                            }));
                         }
 
                         if (newPaid !== oldPaySum) {
                             const diffPay = newPaid - oldPaySum;
                             const trxId = 'TRX_ADJ_PAY_' + Date.now();
-                            set(ref(db, 'qaleb_debts/transactions/' + trxId), {
+                            promises.push(set(ref(db, 'qaleb_debts/transactions/' + trxId), {
                                 id: trxId,
                                 customerId: editId,
                                 type: 'pay',
                                 date: todayStr,
                                 amount: diffPay,
                                 note: 'تسوية وتعديل المبلغ المسدد يدويأ'
-                            });
+                            }));
                         }
 
-                        window.toggleModal('customerModal', false);
+                        Promise.all(promises).then(() => {
+                            submitBtn.disabled = false;
+                            window.toggleModal('customerModal', false);
+                        });
                     })
-                    .catch(err => alert('خطأ: ' + err.message));
+                    .catch(err => {
+                        submitBtn.disabled = false;
+                        alert('خطأ: ' + err.message);
+                    });
             } else {
                 const newId = 'CUST_' + Date.now();
-                const todayStr = new Date().toISOString().split('T')[0];
                 const newCust = {
                     id: newId,
                     name, phone, address, notes,
@@ -945,9 +969,10 @@
                 const initialPaid = Number(document.getElementById('custInitialPaid').value) || 0;
 
                 set(ref(db, 'qaleb_debts/customers/' + newId), newCust).then(() => {
+                    let promises = [];
                     if (initialTotal > 0) {
                         const debtTrxId = 'TRX_INIT_DEBT_' + Date.now();
-                        set(ref(db, 'qaleb_debts/transactions/' + debtTrxId), {
+                        promises.push(set(ref(db, 'qaleb_debts/transactions/' + debtTrxId), {
                             id: debtTrxId,
                             customerId: newId,
                             type: 'debt',
@@ -955,21 +980,27 @@
                             amount: initialTotal,
                             pourType: 'C30',
                             note: 'رصيد صب/دين ابتدائي'
-                        });
+                        }));
                     }
                     if (initialPaid > 0) {
                         const payTrxId = 'TRX_INIT_PAY_' + Date.now();
-                        set(ref(db, 'qaleb_debts/transactions/' + payTrxId), {
+                        promises.push(set(ref(db, 'qaleb_debts/transactions/' + payTrxId), {
                             id: payTrxId,
                             customerId: newId,
                             type: 'pay',
                             date: todayStr,
                             amount: initialPaid,
                             note: 'دفعة تسديد أولية'
-                        });
+                        }));
                     }
-                    window.toggleModal('customerModal', false);
-                }).catch(err => alert('خطأ: ' + err.message));
+                    Promise.all(promises).then(() => {
+                        submitBtn.disabled = false;
+                        window.toggleModal('customerModal', false);
+                    });
+                }).catch(err => {
+                    submitBtn.disabled = false;
+                    alert('خطأ: ' + err.message);
+                });
             }
         };
 
@@ -1009,7 +1040,6 @@
             }
         };
 
-        
         function getLatestActivityDate(custId) {
             const custTrans = window.transactions.filter(t => t.customerId === custId);
             const custCalls = window.calls.filter(c => c.customerId === custId);
@@ -1025,12 +1055,50 @@
             return maxDate || (cust ? cust.createdAt : '') || '2000-01-01';
         }
 
-window.renderCustomersTable = function() {
+        window.toggleCustDateInput = function() {
+            const val = document.getElementById('custFilterBalance').value;
+            const container = document.getElementById('custDateFilterContainer');
+            if (val === 'date_updated') {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+        };
+
+        window.toggleLogsDateInput = function() {
+            const val = document.getElementById('logsFilterBalance').value;
+            const container = document.getElementById('logsDateFilterContainer');
+            if (val === 'date_updated') {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+        };
+
+        function isCustomerUpdatedOnDate(custId, targetDate) {
+            const cust = window.customers.find(c => c.id === custId);
+            if (cust && cust.createdAt === targetDate) return true;
+
+            const custTrans = window.transactions.filter(t => t.customerId === custId);
+            for (let t of custTrans) {
+                if (t.date === targetDate) return true;
+            }
+
+            const custCalls = window.calls.filter(c => c.customerId === custId);
+            for (let c of custCalls) {
+                if (c.date === targetDate || c.targetDate === targetDate) return true;
+            }
+
+            return false;
+        }
+
+        window.renderCustomersTable = function() {
             const tbody = document.getElementById('customersTableBody');
             if (!tbody) return;
             
             const search = (document.getElementById('custSearchInput')?.value || '').toLowerCase().trim();
             const filterBalance = document.getElementById('custFilterBalance')?.value || 'all';
+            const targetDate = document.getElementById('custTargetDateInput')?.value || new Date().toISOString().split('T')[0];
             const sortOrder = document.getElementById('custSortOrder')?.value || 'name';
 
             let list = window.customers.filter(cust => {
@@ -1045,6 +1113,7 @@ window.renderCustomersTable = function() {
                 const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
                 const remaining = debtSum - paySum;
 
+                if (filterBalance === 'date_updated' && !isCustomerUpdatedOnDate(cust.id, targetDate)) return false;
                 if (filterBalance === 'debtors' && remaining <= 0) return false;
                 if (filterBalance === 'cleared' && remaining > 0) return false;
 
@@ -1067,7 +1136,7 @@ window.renderCustomersTable = function() {
             });
 
             if (list.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" class="text-center text-slate-400 py-8 font-bold text-base">لا توجد نتائج مطابقة لخيارات البحث أو الفلترة.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center text-slate-400 py-8 font-bold text-base">لا توجد نتائج مطابقة لخيارات البحث أو الفلترة والتاريخ المحدد.</td></tr>`;
                 return;
             }
 
@@ -1077,10 +1146,14 @@ window.renderCustomersTable = function() {
                 const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
                 const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
                 const remaining = debtSum - paySum;
+                const updatedOnDate = isCustomerUpdatedOnDate(cust.id, targetDate);
 
                 rowsHtml += `
-                    <tr class="hover:bg-slate-700/40">
-                        <td class="p-3.5 font-black text-white text-base">${cust.name}</td>
+                    <tr class="hover:bg-slate-700/40 ${updatedOnDate ? 'bg-amber-500/5' : ''}">
+                        <td class="p-3.5 font-black text-white text-base flex items-center gap-2">
+                            ${cust.name}
+                            ${updatedOnDate ? `<span class="bg-amber-500 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full shadow">محدث (${targetDate})</span>` : ''}
+                        </td>
                         <td class="p-3.5 text-slate-300 font-bold text-xs">${cust.createdAt}</td>
                         <td class="p-3.5 text-amber-300 font-mono font-bold text-sm">${cust.phone}</td>
                         <td class="p-3.5 text-slate-300 font-bold">${cust.address || '-'}</td>
@@ -1353,6 +1426,10 @@ window.renderCustomersTable = function() {
 
         window.handleAddDebt = function(e) {
             e.preventDefault();
+            const submitBtn = document.getElementById('addDebtSubmitBtn');
+            if (submitBtn.disabled) return;
+            submitBtn.disabled = true;
+
             const qty = Number(document.getElementById('pourQuantity').value) || 0;
             const price = Number(document.getElementById('pourPrice').value) || 0;
             const totalAmount = qty * price;
@@ -1371,13 +1448,21 @@ window.renderCustomersTable = function() {
             };
 
             set(ref(db, 'qaleb_debts/transactions/' + trxId), newTrx).then(() => {
+                submitBtn.disabled = false;
                 window.toggleModal('addDebtModal', false);
                 window.selectCustomerForAction(window.selectedCustomerId);
+            }).catch(err => {
+                submitBtn.disabled = false;
+                alert('خطأ: ' + err.message);
             });
         };
 
         window.handlePayDebt = function(e) {
             e.preventDefault();
+            const submitBtn = document.getElementById('payDebtSubmitBtn');
+            if (submitBtn.disabled) return;
+            submitBtn.disabled = true;
+
             const trxId = 'TRX_' + Date.now();
             const newTrx = {
                 id: trxId,
@@ -1389,14 +1474,22 @@ window.renderCustomersTable = function() {
             };
 
             set(ref(db, 'qaleb_debts/transactions/' + trxId), newTrx).then(() => {
+                submitBtn.disabled = false;
                 window.toggleModal('payDebtModal', false);
                 window.selectCustomerForAction(window.selectedCustomerId);
                 window.printSingleTransactionReceipt(newTrx.id);
+            }).catch(err => {
+                submitBtn.disabled = false;
+                alert('خطأ: ' + err.message);
             });
         };
 
         window.handleRecordCall = function(e) {
             e.preventDefault();
+            const submitBtn = document.getElementById('callSubmitBtn');
+            if (submitBtn.disabled) return;
+            submitBtn.disabled = true;
+
             const callId = 'CALL_' + Date.now();
             const newCall = {
                 id: callId,
@@ -1407,39 +1500,26 @@ window.renderCustomersTable = function() {
             };
 
             set(ref(db, 'qaleb_debts/calls/' + callId), newCall).then(() => {
+                submitBtn.disabled = false;
                 window.toggleModal('callModal', false);
+            }).catch(err => {
+                submitBtn.disabled = false;
+                alert('خطأ: ' + err.message);
             });
         };
 
-        // ================= Tab 4: Logs Summary =================
+        // ================= Tab 4: Logs Summary & Filter-Dependent Stats =================
         window.renderLogsSummaryTable = function() {
             const tbody = document.getElementById('logsSummaryTableBody');
             if (!tbody) return;
             tbody.innerHTML = '';
 
-            let grandTotalOriginal = 0;
-            let grandTotalPaid = 0;
-            let grandTotalRemaining = 0;
-
-            window.customers.forEach(cust => {
-                const custTrans = window.transactions.filter(t => t.customerId === cust.id);
-                const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
-                const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
-                const remaining = debtSum - paySum;
-
-                grandTotalOriginal += debtSum;
-                grandTotalPaid += paySum;
-                grandTotalRemaining += remaining;
-            });
-
-            document.getElementById('logsStatTotalOriginal').innerText = window.formatCurr(grandTotalOriginal);
-            document.getElementById('logsStatTotalPaid').innerText = window.formatCurr(grandTotalPaid);
-            document.getElementById('logsStatTotalRemaining').innerText = window.formatCurr(grandTotalRemaining);
-
             const search = (document.getElementById('logsSearchInput')?.value || '').toLowerCase().trim();
             const filterBalance = document.getElementById('logsFilterBalance')?.value || 'all';
+            const targetDate = document.getElementById('logsTargetDateInput')?.value || new Date().toISOString().split('T')[0];
             const sortOrder = document.getElementById('logsSortOrder')?.value || 'name';
 
+            // تصفية الزبائن بناءً على نفس شروط الجدول لكي تكون الإحصائيات تابعة للفلترة حصراً
             let list = window.customers.filter(cust => {
                 const nameMatch = (cust.name || '').toLowerCase().includes(search);
                 const phoneMatch = (cust.phone || '').toLowerCase().includes(search);
@@ -1452,6 +1532,7 @@ window.renderCustomersTable = function() {
                 const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
                 const remaining = debtSum - paySum;
 
+                if (filterBalance === 'date_updated' && !isCustomerUpdatedOnDate(cust.id, targetDate)) return false;
                 if (filterBalance === 'debtors' && remaining <= 0) return false;
                 if (filterBalance === 'cleared' && remaining > 0) return false;
 
@@ -1469,8 +1550,43 @@ window.renderCustomersTable = function() {
                 return a.name.localeCompare(b.name, 'ar');
             });
 
+            // حساب المجاميع والإحصائيات للزبائن المفلترين فقط
+            let filteredTotalOriginal = 0;
+            let filteredTotalPaid = 0;
+            let filteredTotalRemaining = 0;
+            let targetDatePaidSum = 0;
+            let targetDateDebtSum = 0;
+
+            list.forEach(cust => {
+                const custTrans = window.transactions.filter(t => t.customerId === cust.id);
+                const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
+                const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
+                const remaining = debtSum - paySum;
+
+                filteredTotalOriginal += debtSum;
+                filteredTotalPaid += paySum;
+                filteredTotalRemaining += remaining;
+
+                custTrans.forEach(t => {
+                    if (t.date === targetDate) {
+                        if (t.type === 'pay') targetDatePaidSum += Number(t.amount);
+                        if (t.type === 'debt') targetDateDebtSum += Number(t.amount);
+                    }
+                });
+            });
+
+            const targetDateTotalSum = targetDatePaidSum + targetDateDebtSum;
+
+            // تحديث بطاقات الإحصائيات العلوية بقيم الفلترة الحالية
+            document.getElementById('logsStatTotalOriginal').innerText = window.formatCurr(filteredTotalOriginal);
+            document.getElementById('logsStatTotalPaid').innerText = window.formatCurr(filteredTotalPaid);
+            document.getElementById('logsStatTotalRemaining').innerText = window.formatCurr(filteredTotalRemaining);
+            document.getElementById('logsStatTodayPaid').innerText = window.formatCurr(targetDatePaidSum);
+            document.getElementById('logsStatTodayDebt').innerText = window.formatCurr(targetDateDebtSum);
+            document.getElementById('logsStatTodayTotal').innerText = window.formatCurr(targetDateTotalSum);
+
             if (list.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-slate-400 py-8 font-bold text-base">لا توجد سجلات مطابقة لخيارات البحث أو الفلترة.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-slate-400 py-8 font-bold text-base">لا توجد سجلات مطابقة لخيارات البحث أو الفلترة والتاريخ المحدد.</td></tr>`;
                 return;
             }
 
@@ -1480,10 +1596,14 @@ window.renderCustomersTable = function() {
                 const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
                 const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
                 const remaining = debtSum - paySum;
+                const updatedOnDate = isCustomerUpdatedOnDate(cust.id, targetDate);
 
                 htmlRows += `
-                    <tr class="hover:bg-slate-700/40">
-                        <td class="p-4 font-black text-white text-lg">${cust.name}</td>
+                    <tr class="hover:bg-slate-700/40 ${updatedOnDate ? 'bg-amber-500/5' : ''}">
+                        <td class="p-4 font-black text-white text-base flex items-center gap-2">
+                            ${cust.name}
+                            ${updatedOnDate ? `<span class="bg-amber-500 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full shadow">محدث (${targetDate})</span>` : ''}
+                        </td>
                         <td class="p-4 font-mono font-bold text-amber-300">${cust.phone}</td>
                         <td class="p-4 font-bold text-slate-300">${cust.address || '-'}</td>
                         <td class="p-4 font-black text-rose-400 text-base">${window.formatCurr(debtSum)}</td>
@@ -1652,7 +1772,7 @@ window.renderCustomersTable = function() {
             body.innerHTML = htmlContent;
         };
 
-        // ================= Printing Engine (الشعار المرفق في الوسط + رقم الهاتف 077301508888) =================
+        // ================= Printing Engine =================
         function getStandardPrintHeader(docTypeName, cust, dateStr) {
             const logoSvg = `<svg width="70" height="70" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg" style="display:block; margin: 0 auto 8px auto;">
                 <path d="M250 35 L450 150 L450 350 L250 465 L50 350 L50 150 Z" fill="none" stroke="#334155" stroke-width="24"/>

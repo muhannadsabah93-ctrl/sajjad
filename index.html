@@ -135,7 +135,7 @@
             <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl p-4 shadow-lg flex flex-wrap items-center gap-4">
                 <div class="flex-1 min-w-[240px] relative">
                     <i class="fa-solid fa-magnifying-glass absolute right-4 top-3.5 text-slate-400"></i>
-                    <input type="text" id="overviewSearchInput" oninput="renderOverview()" placeholder="بحث في التنبيهات (اسم الزبون أو الهاتف)..." class="w-full bg-slate-900 border border-slate-700 rounded-xl pr-11 pl-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
+                    <input type="text" id="overviewSearchInput" oninput="debouncedRenderOverview()" placeholder="بحث في التنبيهات (اسم الزبون أو الهاتف)..." class="w-full bg-slate-900 border border-slate-700 rounded-xl pr-11 pl-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
                 </div>
                 <div>
                     <select id="overviewFilterType" onchange="renderOverview()" class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
@@ -176,7 +176,7 @@
                 <div class="flex flex-wrap items-center gap-4 bg-slate-900 p-4 rounded-xl border border-slate-700">
                     <div class="flex-1 min-w-[220px] relative">
                         <i class="fa-solid fa-magnifying-glass absolute right-4 top-3.5 text-slate-400"></i>
-                        <input type="text" id="custSearchInput" oninput="renderCustomersTable()" placeholder="ابحث باسم الزبون، رقم الهاتف، أو العنوان..." class="w-full bg-slate-800 border border-slate-700 rounded-xl pr-11 pl-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
+                        <input type="text" id="custSearchInput" oninput="debouncedRenderCustomersTable()" placeholder="ابحث باسم الزبون، رقم الهاتف، أو العنوان..." class="w-full bg-slate-800 border border-slate-700 rounded-xl pr-11 pl-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
                     </div>
                     <div>
                         <select id="custFilterBalance" onchange="toggleCustDateInput(); renderCustomersTable()" class="bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
@@ -282,7 +282,7 @@
                 <div class="flex flex-wrap items-center gap-4">
                     <div class="flex-1 relative min-w-[260px]">
                         <i class="fa-solid fa-magnifying-glass absolute right-4 top-4 text-slate-400 text-lg"></i>
-                        <input type="text" id="actionSearchInput" oninput="filterCustomerSelect()" placeholder="ابحث باسم الزبون أو رقم الهاتف..." class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl pr-12 pl-4 py-3.5 text-base font-bold text-white focus:outline-none focus:border-amber-500 shadow-inner">
+                        <input type="text" id="actionSearchInput" oninput="debouncedFilterCustomerSelect()" placeholder="ابحث باسم الزبون أو رقم الهاتف..." class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl pr-12 pl-4 py-3.5 text-base font-bold text-white focus:outline-none focus:border-amber-500 shadow-inner">
                     </div>
                     <div>
                         <select id="actionFilterOnlyDebtors" onchange="filterCustomerSelect()" class="bg-slate-900 border-2 border-slate-700 rounded-xl px-4 py-3.5 text-base font-bold text-white focus:outline-none focus:border-amber-500">
@@ -366,7 +366,7 @@
                 <div class="flex flex-wrap items-center gap-4 bg-slate-900 p-4 rounded-xl border border-slate-700">
                     <div class="flex-1 min-w-[220px] relative">
                         <i class="fa-solid fa-magnifying-glass absolute right-4 top-3.5 text-slate-400"></i>
-                        <input type="text" id="logsSearchInput" oninput="renderLogsSummaryTable()" placeholder="بحث في السجلات (الاسم، الهاتف، أو العنوان)..." class="w-full bg-slate-800 border border-slate-700 rounded-xl pr-11 pl-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
+                        <input type="text" id="logsSearchInput" oninput="debouncedRenderLogsSummaryTable()" placeholder="بحث في السجلات (الاسم، الهاتف، أو العنوان)..." class="w-full bg-slate-800 border border-slate-700 rounded-xl pr-11 pl-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
                     </div>
                     <div>
                         <select id="logsFilterBalance" onchange="toggleLogsDateInput(); renderLogsSummaryTable()" class="bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
@@ -478,12 +478,17 @@
     <!-- Customer Detailed Log Modal -->
     <div id="customerDetailsModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4 no-print">
         <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl max-w-5xl w-full p-6 space-y-5 shadow-2xl max-h-[92vh] flex flex-col">
-            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+            <div class="flex flex-wrap justify-between items-center gap-3 border-b border-slate-700 pb-3">
                 <div>
                     <h3 class="text-2xl font-black text-amber-400" id="detailCustName">-</h3>
                     <p class="text-sm text-slate-300 font-bold mt-1" id="detailCustSub">-</p>
                 </div>
-                <button onclick="toggleModal('customerDetailsModal', false)" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-3xl"></i></button>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="openAddPourForActiveCustomer()" class="bg-rose-600 hover:bg-rose-700 text-white font-black text-sm px-4 py-2.5 rounded-xl flex items-center gap-2 shadow-lg transition">
+                        <i class="fa-solid fa-truck-ramp-box"></i> إضافة صب
+                    </button>
+                    <button onclick="toggleModal('customerDetailsModal', false)" class="text-slate-400 hover:text-white px-2"><i class="fa-solid fa-xmark text-3xl"></i></button>
+                </div>
             </div>
 
             <!-- Filters Bar -->
@@ -529,50 +534,76 @@
     <div id="addDebtModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4 no-print">
         <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-                <h3 class="text-xl font-black text-white">إضافة عملية صب جديدة</h3>
+                <div>
+                    <h3 class="text-xl font-black text-white">إضافة عملية صب جديدة</h3>
+                    <p class="text-xs text-amber-400 font-bold mt-0.5" id="pourModalCustName"></p>
+                </div>
                 <button onclick="toggleModal('addDebtModal', false)" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
             </div>
             <form onsubmit="handleAddDebt(event)" class="space-y-4 text-base font-bold">
                 <div>
                     <label class="block text-sm text-slate-300 mb-1">تاريخ الصب *</label>
-                    <input type="date" id="debtDate" required class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white">
+                    <input type="date" id="debtDate" required class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-amber-500">
                 </div>
-                <div>
-                    <label class="block text-sm text-slate-300 mb-1">نوع الكونكريت *</label>
-                    <select id="pourType" required class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-amber-500">
-                        <option value="C15">C15</option>
-                        <option value="C20">C20</option>
-                        <option value="C25">C25</option>
-                        <option value="C30">C30</option>
-                        <option value="C35">C35</option>
-                        <option value="C40">C40</option>
-                        <option value="C45">C45</option>
-                        <option value="C50">C50</option>
-                        <option value="C55">C55</option>
-                        <option value="C60">C60</option>
-                        <option value="C65">C65</option>
-                        <option value="C70">C70</option>
-                        <option value="C75">C75</option>
-                        <option value="C80">C80</option>
-                    </select>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
+
+                <!-- Row 1: Resistance (C15 to C80) + Optional Pump Fee -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm text-slate-300 mb-1">كمية الصب (م³ أو عدد) *</label>
-                        <input type="number" id="pourQuantity" step="any" min="0.01" required oninput="calculatePourTotal()" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white">
+                        <label class="block text-sm text-slate-300 mb-1">المقاومة (نوع الكونكريت) *</label>
+                        <select id="pourType" required class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-amber-500">
+                            <option value="C15">C15</option>
+                            <option value="C20">C20</option>
+                            <option value="C25">C25</option>
+                            <option value="C30" selected>C30</option>
+                            <option value="C35">C35</option>
+                            <option value="C40">C40</option>
+                            <option value="C45">C45</option>
+                            <option value="C50">C50</option>
+                            <option value="C55">C55</option>
+                            <option value="C60">C60</option>
+                            <option value="C65">C65</option>
+                            <option value="C70">C70</option>
+                            <option value="C75">C75</option>
+                            <option value="C80">C80</option>
+                        </select>
                     </div>
                     <div>
-                        <label class="block text-sm text-slate-300 mb-1">سعر الصب (للوحدة) *</label>
-                        <input type="number" id="pourPrice" step="any" min="0" required oninput="calculatePourTotal()" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white">
+                        <label class="block text-sm text-slate-300 mb-1">سعر / أجرة المضخة <span class="text-xs text-slate-400 font-semibold">(اختياري)</span></label>
+                        <input type="number" id="pourPumpFee" step="any" min="0" placeholder="0" oninput="calculatePourTotal()" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-amber-500">
                     </div>
                 </div>
-                <div class="bg-slate-900 p-3 rounded-xl border border-slate-700 flex justify-between items-center">
-                    <span class="text-sm text-slate-300">المبلغ الإجمالي للصب:</span>
-                    <span class="text-lg font-black text-amber-400" id="pourTotalDisplay">0 د.ع</span>
+
+                <!-- Row 2: Cubic Meters / Quantity + Price per Cubic Meter -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-slate-300 mb-1">عدد المكعبات / كمية الصب *</label>
+                        <input type="number" id="pourQuantity" step="any" min="0.01" required placeholder="مثال: 25" oninput="calculatePourTotal()" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-slate-300 mb-1">سعر المكعب الواحد *</label>
+                        <input type="number" id="pourPrice" step="any" min="0" required placeholder="د.ع" oninput="calculatePourTotal()" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-amber-500">
+                    </div>
                 </div>
+
+                <!-- Breakdown & Total Display -->
+                <div class="bg-slate-900 p-3.5 rounded-xl border border-slate-700 space-y-1.5">
+                    <div class="flex justify-between items-center text-xs text-slate-300">
+                        <span>مبلغ المكعبات:</span>
+                        <span class="font-bold text-slate-200" id="pourConcreteSubtotalDisplay">0 د.ع</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs text-slate-300">
+                        <span>أجرة المضخة:</span>
+                        <span class="font-bold text-sky-300" id="pourPumpFeeDisplay">0 د.ع</span>
+                    </div>
+                    <div class="flex justify-between items-center pt-1.5 border-t border-slate-800">
+                        <span class="text-sm text-slate-200">المبلغ الإجمالي للصب:</span>
+                        <span class="text-lg font-black text-amber-400" id="pourTotalDisplay">0 د.ع</span>
+                    </div>
+                </div>
+
                 <div>
                     <label class="block text-sm text-slate-300 mb-1">الملاحظات</label>
-                    <textarea id="debtNote" rows="2" placeholder="ملاحظات إضافية حول عملية الصب..." class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white"></textarea>
+                    <textarea id="debtNote" rows="2" placeholder="ملاحظات إضافية حول عملية الصب..." class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-amber-500"></textarea>
                 </div>
                 <div class="pt-3 flex justify-end gap-3">
                     <button type="button" onclick="toggleModal('addDebtModal', false)" class="px-5 py-2.5 bg-slate-700 text-slate-200 rounded-xl font-bold">إلغاء</button>
@@ -674,12 +705,112 @@
         const analytics = getAnalytics(app);
         const db = getDatabase(app);
 
+        // Core datasets & pre-indexed lookup maps for O(1) / O(N) lightweight queries
         window.customers = [];
         window.transactions = [];
         window.calls = [];
+        window.customerMap = new Map();
+        window.transactionMap = new Map();
+        window.txByCustomer = new Map();
+        window.callsByCustomer = new Map();
+        window.customerSummaryMap = new Map();
+        window.latestActivityMap = new Map();
         window.selectedCustomerId = null;
         window.activeDetailCustId = null;
+        window.pourTargetCustomerId = null;
+
         let isUIUpdating = false;
+        let currentActiveTab = 'overview';
+
+        // Helper for lightweight debounce (~120ms) on search inputs
+        function createDebounce(fn, delay = 120) {
+            let timerId = null;
+            return function(...args) {
+                if (timerId) clearTimeout(timerId);
+                timerId = setTimeout(() => fn.apply(this, args), delay);
+            };
+        }
+
+        // Rebuild pre-indexed maps whenever snapshots arrive
+        function rebuildIndexes() {
+            const custMap = new Map();
+            const txMap = new Map();
+            const txByCust = new Map();
+            const callsByCust = new Map();
+            const summaryMap = new Map();
+            const latestMap = new Map();
+
+            for (let i = 0; i < window.customers.length; i++) {
+                const c = window.customers[i];
+                custMap.set(c.id, c);
+                txByCust.set(c.id, []);
+                callsByCust.set(c.id, []);
+                latestMap.set(c.id, c.createdAt || '2000-01-01');
+            }
+
+            for (let i = 0; i < window.transactions.length; i++) {
+                const t = window.transactions[i];
+                txMap.set(t.id, t);
+                let bucket = txByCust.get(t.customerId);
+                if (!bucket) {
+                    bucket = [];
+                    txByCust.set(t.customerId, bucket);
+                }
+                bucket.push(t);
+
+                const curLatest = latestMap.get(t.customerId) || '';
+                if (t.date && t.date > curLatest) {
+                    latestMap.set(t.customerId, t.date);
+                }
+            }
+
+            for (let i = 0; i < window.calls.length; i++) {
+                const cl = window.calls[i];
+                let cBucket = callsByCust.get(cl.customerId);
+                if (!cBucket) {
+                    cBucket = [];
+                    callsByCust.set(cl.customerId, cBucket);
+                }
+                cBucket.push(cl);
+
+                const curLatest = latestMap.get(cl.customerId) || '';
+                if (cl.date && cl.date > curLatest) {
+                    latestMap.set(cl.customerId, cl.date);
+                }
+                if (cl.targetDate && cl.targetDate > curLatest) {
+                    latestMap.set(cl.customerId, cl.targetDate);
+                }
+            }
+
+            // Precompute debtSum, paySum, remaining per customer once per snapshot update
+            for (let i = 0; i < window.customers.length; i++) {
+                const c = window.customers[i];
+                const cTrans = txByCust.get(c.id) || [];
+                let debtSum = 0;
+                let paySum = 0;
+                for (let j = 0; j < cTrans.length; j++) {
+                    const tr = cTrans[j];
+                    if (tr.type === 'debt') debtSum += Number(tr.amount) || 0;
+                    else if (tr.type === 'pay') paySum += Number(tr.amount) || 0;
+                }
+                summaryMap.set(c.id, {
+                    debtSum,
+                    paySum,
+                    remaining: debtSum - paySum
+                });
+            }
+
+            window.customerMap = custMap;
+            window.transactionMap = txMap;
+            window.txByCustomer = txByCust;
+            window.callsByCustomer = callsByCust;
+            window.customerSummaryMap = summaryMap;
+            window.latestActivityMap = latestMap;
+        }
+
+        function getCustomerSummary(custId) {
+            return window.customerSummaryMap.get(custId) || { debtSum: 0, paySum: 0, remaining: 0 };
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
             const todayStr = new Date().toISOString().split('T')[0];
@@ -716,24 +847,31 @@
             if (isUIUpdating) return;
             isUIUpdating = true;
             requestAnimationFrame(() => {
+                rebuildIndexes();
                 window.refreshUI();
                 isUIUpdating = false;
             });
         }
 
+        // Render only the currently active tab (and open modal if visible) for maximum lightness
         window.refreshUI = function() {
-            renderOverview();
-            renderCustomersTable();
-            renderLogsSummaryTable();
-            if (window.selectedCustomerId) {
-                selectCustomerForAction(window.selectedCustomerId);
+            if (currentActiveTab === 'overview') {
+                renderOverview();
+            } else if (currentActiveTab === 'customers') {
+                renderCustomersTable();
+            } else if (currentActiveTab === 'logs') {
+                renderLogsSummaryTable();
+            } else if (currentActiveTab === 'actions' && window.selectedCustomerId) {
+                updateSelectedCustomerCard(window.selectedCustomerId);
             }
+
             if (window.activeDetailCustId && !document.getElementById('customerDetailsModal').classList.contains('hidden')) {
                 renderCustomerDetailsContent();
             }
         };
 
         window.switchTab = function(tabName) {
+            currentActiveTab = tabName;
             requestAnimationFrame(() => {
                 document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
                 document.querySelectorAll('.tab-btn').forEach(el => {
@@ -766,6 +904,12 @@
             return Number(num || 0).toLocaleString('ar-IQ') + ' د.ع';
         };
 
+        // Debounced search triggers
+        window.debouncedRenderOverview = createDebounce(() => renderOverview(), 120);
+        window.debouncedRenderCustomersTable = createDebounce(() => renderCustomersTable(), 120);
+        window.debouncedRenderLogsSummaryTable = createDebounce(() => renderLogsSummaryTable(), 120);
+        window.debouncedFilterCustomerSelect = createDebounce(() => filterCustomerSelect(), 120);
+
         // ================= Tab 1: Overview =================
         function renderOverview() {
             let totalRemaining = 0;
@@ -778,14 +922,15 @@
             const currentMonth = now.getMonth();
             let monthCollected = 0;
 
-            window.transactions.forEach(t => {
-                const tDate = new Date(t.date);
+            for (let i = 0; i < window.transactions.length; i++) {
+                const t = window.transactions[i];
                 if (t.type === 'pay') {
+                    const tDate = new Date(t.date);
                     if (tDate.getFullYear() === currentYear && tDate.getMonth() === currentMonth) {
-                        monthCollected += Number(t.amount);
+                        monthCollected += Number(t.amount) || 0;
                     }
                 }
-            });
+            }
 
             const alertsList = document.getElementById('alertsList');
             let alertsHtml = '';
@@ -795,26 +940,26 @@
             const overviewSearch = (document.getElementById('overviewSearchInput')?.value || '').toLowerCase().trim();
             const overviewFilter = document.getElementById('overviewFilterType')?.value || 'all';
 
-            window.customers.forEach(cust => {
-                const custTrans = window.transactions.filter(t => t.customerId === cust.id);
-                const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
-                const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
-                const remaining = debtSum - paySum;
+            for (let i = 0; i < window.customers.length; i++) {
+                const cust = window.customers[i];
+                const { debtSum, remaining } = getCustomerSummary(cust.id);
 
                 totalOriginal += debtSum;
                 totalRemaining += remaining;
 
-                const custCalls = window.calls.filter(c => c.customerId === cust.id && c.targetDate);
-                custCalls.forEach(c => {
-                    if (remaining > 0 && c.targetDate <= todayStr) {
+                if (remaining <= 0) continue;
+
+                const nameMatch = overviewSearch ? (cust.name || '').toLowerCase().includes(overviewSearch) : true;
+                const phoneMatch = overviewSearch ? (cust.phone || '').includes(overviewSearch) : true;
+                if (overviewSearch && !nameMatch && !phoneMatch) continue;
+
+                const custCalls = window.callsByCustomer.get(cust.id) || [];
+                for (let j = 0; j < custCalls.length; j++) {
+                    const c = custCalls[j];
+                    if (c.targetDate && c.targetDate <= todayStr) {
                         const isLate = c.targetDate < todayStr;
-
-                        if (overviewFilter === 'late' && !isLate) return;
-                        if (overviewFilter === 'today' && isLate) return;
-
-                        if (overviewSearch && !cust.name.toLowerCase().includes(overviewSearch) && !cust.phone.includes(overviewSearch)) {
-                            return;
-                        }
+                        if (overviewFilter === 'late' && !isLate) continue;
+                        if (overviewFilter === 'today' && isLate) continue;
 
                         alertCount++;
                         dueTodayAmount += remaining;
@@ -839,8 +984,8 @@
                             </div>
                         `;
                     }
-                });
-            });
+                }
+            }
 
             if (alertCount === 0) {
                 alertsHtml = `<p class="text-center text-base text-slate-400 py-6 font-bold">لا توجد تنبيهات تأخير أو استحقاقات مطابقة لبحثك.</p>`;
@@ -866,7 +1011,7 @@
         };
 
         window.openEditCustomerModal = function(custID) {
-            const cust = window.customers.find(c => c.id === custID);
+            const cust = window.customerMap.get(custID);
             if (!cust) return;
 
             document.getElementById('customerModalTitle').innerText = 'تعديل بيانات الزبون الحسابية والأساسية';
@@ -879,9 +1024,7 @@
             document.getElementById('initialFinancialsContainer').style.display = 'none';
             document.getElementById('editFinancialsContainer').classList.remove('hidden');
 
-            const custTrans = window.transactions.filter(t => t.customerId === cust.id);
-            const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
-            const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
+            const { debtSum, paySum } = getCustomerSummary(cust.id);
 
             document.getElementById('editTotalAmount').value = debtSum;
             document.getElementById('editPaidAmount').value = paySum;
@@ -916,9 +1059,7 @@
                         const newTotal = Number(document.getElementById('editTotalAmount').value) || 0;
                         const newPaid = Number(document.getElementById('editPaidAmount').value) || 0;
                         
-                        const custTrans = window.transactions.filter(t => t.customerId === editId);
-                        const oldDebtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
-                        const oldPaySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
+                        const { debtSum: oldDebtSum, paySum: oldPaySum } = getCustomerSummary(editId);
 
                         let promises = [];
                         if (newTotal !== oldDebtSum) {
@@ -931,7 +1072,7 @@
                                 date: todayStr,
                                 amount: diffDebt,
                                 pourType: 'C30',
-                                note: 'تسوية وتعديل المبلغ الكلي يدويأ'
+                                note: 'تسوية وتعديل المبلغ الكلي يدوياً'
                             }));
                         }
 
@@ -944,7 +1085,7 @@
                                 type: 'pay',
                                 date: todayStr,
                                 amount: diffPay,
-                                note: 'تسوية وتعديل المبلغ المسدد يدويأ'
+                                note: 'تسوية وتعديل المبلغ المسدد يدوياً'
                             }));
                         }
 
@@ -1005,7 +1146,7 @@
         };
 
         window.deleteCustomer = function(custID) {
-            const cust = window.customers.find(c => c.id === custID);
+            const cust = window.customerMap.get(custID);
             if (!cust) return;
 
             const password = prompt("هذا الإجراء يتطلب صلاحية المدير. يرجى إدخال كلمة المرور للحذف:");
@@ -1019,21 +1160,19 @@
             if (confirm(`هل أنت متأكد من حذف الزبون (${cust.name}) وكافة مبالغه، ديونه، وسجلاته نهائياً؟`)) {
                 remove(ref(db, 'qaleb_debts/customers/' + custID));
                 
-                window.transactions.forEach(t => {
-                    if (t.customerId === custID) {
-                        remove(ref(db, 'qaleb_debts/transactions/' + t.id));
-                    }
-                });
+                const cTrans = window.txByCustomer.get(custID) || [];
+                cTrans.forEach(t => remove(ref(db, 'qaleb_debts/transactions/' + t.id)));
 
-                window.calls.forEach(c => {
-                    if (c.customerId === custID) {
-                        remove(ref(db, 'qaleb_debts/calls/' + c.id));
-                    }
-                });
+                const cCalls = window.callsByCustomer.get(custID) || [];
+                cCalls.forEach(c => remove(ref(db, 'qaleb_debts/calls/' + c.id)));
 
                 if (window.selectedCustomerId === custID) {
                     window.selectedCustomerId = null;
                     document.getElementById('selectedCustomerCard').classList.add('hidden');
+                }
+                if (window.activeDetailCustId === custID) {
+                    window.activeDetailCustId = null;
+                    window.toggleModal('customerDetailsModal', false);
                 }
 
                 alert("تم حذف الزبون وكافة المبالغ والبيانات الخاصة به بنجاح، وتصحيح مجاميع النظام.");
@@ -1041,18 +1180,7 @@
         };
 
         function getLatestActivityDate(custId) {
-            const custTrans = window.transactions.filter(t => t.customerId === custId);
-            const custCalls = window.calls.filter(c => c.customerId === custId);
-            let maxDate = '';
-            custTrans.forEach(t => {
-                if (t.date && (!maxDate || t.date > maxDate)) maxDate = t.date;
-            });
-            custCalls.forEach(c => {
-                if (c.date && (!maxDate || c.date > maxDate)) maxDate = c.date;
-                if (c.targetDate && (!maxDate || c.targetDate > maxDate)) maxDate = c.targetDate;
-            });
-            const cust = window.customers.find(c => c.id === custId);
-            return maxDate || (cust ? cust.createdAt : '') || '2000-01-01';
+            return window.latestActivityMap.get(custId) || '2000-01-01';
         }
 
         window.toggleCustDateInput = function() {
@@ -1076,17 +1204,17 @@
         };
 
         function isCustomerUpdatedOnDate(custId, targetDate) {
-            const cust = window.customers.find(c => c.id === custId);
+            const cust = window.customerMap.get(custId);
             if (cust && cust.createdAt === targetDate) return true;
 
-            const custTrans = window.transactions.filter(t => t.customerId === custId);
-            for (let t of custTrans) {
-                if (t.date === targetDate) return true;
+            const custTrans = window.txByCustomer.get(custId) || [];
+            for (let i = 0; i < custTrans.length; i++) {
+                if (custTrans[i].date === targetDate) return true;
             }
 
-            const custCalls = window.calls.filter(c => c.customerId === custId);
-            for (let c of custCalls) {
-                if (c.date === targetDate || c.targetDate === targetDate) return true;
+            const custCalls = window.callsByCustomer.get(custId) || [];
+            for (let i = 0; i < custCalls.length; i++) {
+                if (custCalls[i].date === targetDate || custCalls[i].targetDate === targetDate) return true;
             }
 
             return false;
@@ -1101,33 +1229,30 @@
             const targetDate = document.getElementById('custTargetDateInput')?.value || new Date().toISOString().split('T')[0];
             const sortOrder = document.getElementById('custSortOrder')?.value || 'name';
 
-            let list = window.customers.filter(cust => {
-                const nameMatch = (cust.name || '').toLowerCase().includes(search);
-                const phoneMatch = (cust.phone || '').toLowerCase().includes(search);
-                const addressMatch = (cust.address || '').toLowerCase().includes(search);
-                const matchText = !search || nameMatch || phoneMatch || addressMatch;
-                if (!matchText) return false;
+            let list = [];
+            for (let i = 0; i < window.customers.length; i++) {
+                const cust = window.customers[i];
+                if (search) {
+                    const nameMatch = (cust.name || '').toLowerCase().includes(search);
+                    const phoneMatch = (cust.phone || '').toLowerCase().includes(search);
+                    const addressMatch = (cust.address || '').toLowerCase().includes(search);
+                    if (!nameMatch && !phoneMatch && !addressMatch) continue;
+                }
 
-                const custTrans = window.transactions.filter(t => t.customerId === cust.id);
-                const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
-                const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
-                const remaining = debtSum - paySum;
+                const { remaining } = getCustomerSummary(cust.id);
+                if (filterBalance === 'date_updated' && !isCustomerUpdatedOnDate(cust.id, targetDate)) continue;
+                if (filterBalance === 'debtors' && remaining <= 0) continue;
+                if (filterBalance === 'cleared' && remaining > 0) continue;
 
-                if (filterBalance === 'date_updated' && !isCustomerUpdatedOnDate(cust.id, targetDate)) return false;
-                if (filterBalance === 'debtors' && remaining <= 0) return false;
-                if (filterBalance === 'cleared' && remaining > 0) return false;
-
-                return true;
-            });
+                list.push(cust);
+            }
 
             list.sort((a, b) => {
-                const aTrans = window.transactions.filter(t => t.customerId === a.id);
-                const aRem = aTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0) - aTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
-
-                const bTrans = window.transactions.filter(t => t.customerId === b.id);
-                const bRem = bTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0) - bTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
-
-                if (sortOrder === 'highest_debt') return bRem - aRem;
+                if (sortOrder === 'highest_debt') {
+                    const bRem = getCustomerSummary(b.id).remaining;
+                    const aRem = getCustomerSummary(a.id).remaining;
+                    return bRem - aRem;
+                }
                 if (sortOrder === 'newest') return (b.createdAt || '').localeCompare(a.createdAt || '');
                 if (sortOrder === 'latest_activity') {
                     return getLatestActivityDate(b.id).localeCompare(getLatestActivityDate(a.id));
@@ -1141,11 +1266,9 @@
             }
 
             let rowsHtml = '';
-            list.forEach(cust => {
-                const custTrans = window.transactions.filter(t => t.customerId === cust.id);
-                const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
-                const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
-                const remaining = debtSum - paySum;
+            for (let i = 0; i < list.length; i++) {
+                const cust = list[i];
+                const { debtSum, paySum, remaining } = getCustomerSummary(cust.id);
                 const updatedOnDate = isCustomerUpdatedOnDate(cust.id, targetDate);
 
                 rowsHtml += `
@@ -1176,7 +1299,7 @@
                         </td>
                     </tr>
                 `;
-            });
+            }
             tbody.innerHTML = rowsHtml;
         }
 
@@ -1194,11 +1317,9 @@
                 ["Customer ID", "Customer Name", "Phone Number", "Address", "Customer Notes", "Total Debt (IQD)", "Total Paid (IQD)", "Remaining (IQD)", "Registration Date"]
             ];
 
-            window.customers.forEach(cust => {
-                const custTrans = window.transactions.filter(t => t.customerId === cust.id);
-                const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
-                const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
-                const remaining = debtSum - paySum;
+            for (let i = 0; i < window.customers.length; i++) {
+                const cust = window.customers[i];
+                const { debtSum, paySum, remaining } = getCustomerSummary(cust.id);
 
                 rows.push([
                     cust.id,
@@ -1211,7 +1332,7 @@
                     remaining,
                     cust.createdAt || ''
                 ]);
-            });
+            }
 
             const wb = XLSX.utils.book_new();
             const ws = XLSX.utils.aoa_to_sheet(rows);
@@ -1338,33 +1459,23 @@
             const filterDebtors = document.getElementById('actionFilterOnlyDebtors').value;
             const resultsContainer = document.getElementById('actionSearchResults');
             if (!resultsContainer) return;
-            resultsContainer.innerHTML = '';
 
-            if (!query && filterDebtors === 'all') return;
-
-            const filtered = window.customers.filter(cust => {
-                const nameMatch = (cust.name || '').toLowerCase().includes(query);
-                const phoneMatch = (cust.phone || '').toLowerCase().includes(query);
-                const matchQuery = !query || nameMatch || phoneMatch;
-                if (!matchQuery) return false;
-
-                if (filterDebtors === 'debtors') {
-                    const custTrans = window.transactions.filter(t => t.customerId === cust.id);
-                    const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
-                    const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
-                    const remaining = debtSum - paySum;
-                    if (remaining <= 0) return false;
-                }
-
-                return true;
-            });
+            if (!query && filterDebtors === 'all') {
+                resultsContainer.innerHTML = '';
+                return;
+            }
 
             let html = '';
-            filtered.forEach(cust => {
-                const custTrans = window.transactions.filter(t => t.customerId === cust.id);
-                const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
-                const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
-                const remaining = debtSum - paySum;
+            for (let i = 0; i < window.customers.length; i++) {
+                const cust = window.customers[i];
+                if (query) {
+                    const nameMatch = (cust.name || '').toLowerCase().includes(query);
+                    const phoneMatch = (cust.phone || '').toLowerCase().includes(query);
+                    if (!nameMatch && !phoneMatch) continue;
+                }
+
+                const { remaining } = getCustomerSummary(cust.id);
+                if (filterDebtors === 'debtors' && remaining <= 0) continue;
 
                 html += `
                     <div onclick="selectCustomerForAction('${cust.id}')" class="p-4 bg-slate-900 hover:bg-slate-700/80 rounded-xl border border-slate-700 cursor-pointer flex justify-between items-center transition">
@@ -1378,46 +1489,71 @@
                         </div>
                     </div>
                 `;
-            });
+            }
             resultsContainer.innerHTML = html.length > 0 ? html : `<p class="text-center text-slate-400 py-4 font-bold">لا توجد نتائج مطابقة في مركز الاتصالات.</p>`;
         };
 
+        function updateSelectedCustomerCard(custID) {
+            const cust = window.customerMap.get(custID);
+            if (!cust) return;
+            const { debtSum, remaining } = getCustomerSummary(cust.id);
+            document.getElementById('actionCustName').innerText = cust.name;
+            document.getElementById('actionCustPhone').innerText = `رقم الهاتف: ${cust.phone} | العنوان: ${cust.address || 'غير محدد'}`;
+            document.getElementById('actionCustTotal').innerText = `إجمالي الصب: ` + window.formatCurr(debtSum);
+            document.getElementById('actionCustRemaining').innerText = `المتبقي: ` + window.formatCurr(remaining);
+        }
+
         window.selectCustomerForAction = function(custID) {
             window.selectedCustomerId = custID;
-            const cust = window.customers.find(c => c.id === custID);
+            const cust = window.customerMap.get(custID);
             if (!cust) return;
 
             window.switchTab('actions');
             document.getElementById('selectedCustomerCard').classList.remove('hidden');
             document.getElementById('actionSearchResults').innerHTML = '';
             document.getElementById('actionSearchInput').value = '';
-
-            const custTrans = window.transactions.filter(t => t.customerId === cust.id);
-            const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
-            const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
-            const remaining = debtSum - paySum;
-
-            document.getElementById('actionCustName').innerText = cust.name;
-            document.getElementById('actionCustPhone').innerText = `رقم الهاتف: ${cust.phone} | العنوان: ${cust.address || 'غير محدد'}`;
-            document.getElementById('actionCustTotal').innerText = `إجمالي الصب: ` + window.formatCurr(debtSum);
-            document.getElementById('actionCustRemaining').innerText = `المتبقي: ` + window.formatCurr(remaining);
+            updateSelectedCustomerCard(custID);
         };
 
-        window.openAddDebtModal = function() { 
+        // Open Add Pour Modal for a specific customer ID (used by both Tab 3 and Tab 4 Details Modal)
+        window.openAddPourModalForCustomer = function(custID) {
+            if (!custID) return;
+            window.pourTargetCustomerId = custID;
+            const cust = window.customerMap.get(custID);
+            document.getElementById('pourModalCustName').innerText = cust ? `الزبون: ${cust.name}` : '';
+            document.getElementById('debtDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('pourType').value = 'C30';
+            document.getElementById('pourPumpFee').value = '';
+            document.getElementById('pourQuantity').value = '';
+            document.getElementById('pourPrice').value = '';
+            document.getElementById('pourConcreteSubtotalDisplay').innerText = '0 د.ع';
+            document.getElementById('pourPumpFeeDisplay').innerText = '0 د.ع';
+            document.getElementById('pourTotalDisplay').innerText = '0 د.ع';
+            document.getElementById('debtNote').value = '';
+            window.toggleModal('addDebtModal', true);
+        };
+
+        window.openAddDebtModal = function() {
             if (window.selectedCustomerId) {
-                document.getElementById('pourType').value = 'C30';
-                document.getElementById('pourQuantity').value = '';
-                document.getElementById('pourPrice').value = '';
-                document.getElementById('pourTotalDisplay').innerText = '0 د.ع';
-                document.getElementById('debtNote').value = '';
-                window.toggleModal('addDebtModal', true); 
+                window.openAddPourModalForCustomer(window.selectedCustomerId);
+            }
+        };
+
+        window.openAddPourForActiveCustomer = function() {
+            if (window.activeDetailCustId) {
+                window.openAddPourModalForCustomer(window.activeDetailCustId);
             }
         };
 
         window.calculatePourTotal = function() {
             const qty = Number(document.getElementById('pourQuantity').value) || 0;
             const price = Number(document.getElementById('pourPrice').value) || 0;
-            const total = qty * price;
+            const pumpFee = Number(document.getElementById('pourPumpFee').value) || 0;
+            const concreteSubtotal = qty * price;
+            const total = concreteSubtotal + pumpFee;
+
+            document.getElementById('pourConcreteSubtotalDisplay').innerText = window.formatCurr(concreteSubtotal);
+            document.getElementById('pourPumpFeeDisplay').innerText = window.formatCurr(pumpFee);
             document.getElementById('pourTotalDisplay').innerText = window.formatCurr(total);
         };
 
@@ -1428,20 +1564,25 @@
             e.preventDefault();
             const submitBtn = document.getElementById('addDebtSubmitBtn');
             if (submitBtn.disabled) return;
+            const targetCustId = window.pourTargetCustomerId || window.selectedCustomerId;
+            if (!targetCustId) return;
+
             submitBtn.disabled = true;
 
             const qty = Number(document.getElementById('pourQuantity').value) || 0;
             const price = Number(document.getElementById('pourPrice').value) || 0;
-            const totalAmount = qty * price;
+            const pumpFee = Number(document.getElementById('pourPumpFee').value) || 0;
+            const totalAmount = (qty * price) + pumpFee;
 
             const trxId = 'TRX_' + Date.now();
             const newTrx = {
                 id: trxId,
-                customerId: window.selectedCustomerId,
+                customerId: targetCustId,
                 type: 'debt',
                 date: document.getElementById('debtDate').value,
                 amount: totalAmount,
                 pourType: document.getElementById('pourType').value,
+                pumpFee: pumpFee,
                 quantity: qty,
                 price: price,
                 note: document.getElementById('debtNote').value.trim()
@@ -1450,7 +1591,9 @@
             set(ref(db, 'qaleb_debts/transactions/' + trxId), newTrx).then(() => {
                 submitBtn.disabled = false;
                 window.toggleModal('addDebtModal', false);
-                window.selectCustomerForAction(window.selectedCustomerId);
+                if (window.selectedCustomerId === targetCustId) {
+                    updateSelectedCustomerCard(targetCustId);
+                }
             }).catch(err => {
                 submitBtn.disabled = false;
                 alert('خطأ: ' + err.message);
@@ -1476,7 +1619,7 @@
             set(ref(db, 'qaleb_debts/transactions/' + trxId), newTrx).then(() => {
                 submitBtn.disabled = false;
                 window.toggleModal('payDebtModal', false);
-                window.selectCustomerForAction(window.selectedCustomerId);
+                updateSelectedCustomerCard(window.selectedCustomerId);
                 window.printSingleTransactionReceipt(newTrx.id);
             }).catch(err => {
                 submitBtn.disabled = false;
@@ -1512,91 +1655,66 @@
         window.renderLogsSummaryTable = function() {
             const tbody = document.getElementById('logsSummaryTableBody');
             if (!tbody) return;
-            tbody.innerHTML = '';
 
             const search = (document.getElementById('logsSearchInput')?.value || '').toLowerCase().trim();
             const filterBalance = document.getElementById('logsFilterBalance')?.value || 'all';
             const targetDate = document.getElementById('logsTargetDateInput')?.value || new Date().toISOString().split('T')[0];
             const sortOrder = document.getElementById('logsSortOrder')?.value || 'name';
 
-            // تصفية الزبائن بناءً على نفس شروط الجدول لكي تكون الإحصائيات تابعة للفلترة حصراً
-            let list = window.customers.filter(cust => {
-                const nameMatch = (cust.name || '').toLowerCase().includes(search);
-                const phoneMatch = (cust.phone || '').toLowerCase().includes(search);
-                const addressMatch = (cust.address || '').toLowerCase().includes(search);
-                const matchText = !search || nameMatch || phoneMatch || addressMatch;
-                if (!matchText) return false;
+            let list = [];
+            for (let i = 0; i < window.customers.length; i++) {
+                const cust = window.customers[i];
+                if (search) {
+                    const nameMatch = (cust.name || '').toLowerCase().includes(search);
+                    const phoneMatch = (cust.phone || '').toLowerCase().includes(search);
+                    const addressMatch = (cust.address || '').toLowerCase().includes(search);
+                    if (!nameMatch && !phoneMatch && !addressMatch) continue;
+                }
 
-                const custTrans = window.transactions.filter(t => t.customerId === cust.id);
-                const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
-                const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
-                const remaining = debtSum - paySum;
+                const { remaining } = getCustomerSummary(cust.id);
+                if (filterBalance === 'date_updated' && !isCustomerUpdatedOnDate(cust.id, targetDate)) continue;
+                if (filterBalance === 'debtors' && remaining <= 0) continue;
+                if (filterBalance === 'cleared' && remaining > 0) continue;
 
-                if (filterBalance === 'date_updated' && !isCustomerUpdatedOnDate(cust.id, targetDate)) return false;
-                if (filterBalance === 'debtors' && remaining <= 0) return false;
-                if (filterBalance === 'cleared' && remaining > 0) return false;
-
-                return true;
-            });
+                list.push(cust);
+            }
 
             list.sort((a, b) => {
-                const aTrans = window.transactions.filter(t => t.customerId === a.id);
-                const aRem = aTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0) - aTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
-
-                const bTrans = window.transactions.filter(t => t.customerId === b.id);
-                const bRem = bTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0) - bTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
-
-                if (sortOrder === 'highest_debt') return bRem - aRem;
+                if (sortOrder === 'highest_debt') {
+                    const bRem = getCustomerSummary(b.id).remaining;
+                    const aRem = getCustomerSummary(a.id).remaining;
+                    return bRem - aRem;
+                }
+                if (sortOrder === 'latest_activity') {
+                    return getLatestActivityDate(b.id).localeCompare(getLatestActivityDate(a.id));
+                }
                 return a.name.localeCompare(b.name, 'ar');
             });
 
-            // حساب المجاميع والإحصائيات للزبائن المفلترين فقط
             let filteredTotalOriginal = 0;
             let filteredTotalPaid = 0;
             let filteredTotalRemaining = 0;
             let targetDatePaidSum = 0;
             let targetDateDebtSum = 0;
 
-            list.forEach(cust => {
-                const custTrans = window.transactions.filter(t => t.customerId === cust.id);
-                const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
-                const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
-                const remaining = debtSum - paySum;
+            let htmlRows = '';
+            for (let i = 0; i < list.length; i++) {
+                const cust = list[i];
+                const { debtSum, paySum, remaining } = getCustomerSummary(cust.id);
+                const updatedOnDate = isCustomerUpdatedOnDate(cust.id, targetDate);
 
                 filteredTotalOriginal += debtSum;
                 filteredTotalPaid += paySum;
                 filteredTotalRemaining += remaining;
 
-                custTrans.forEach(t => {
+                const custTrans = window.txByCustomer.get(cust.id) || [];
+                for (let j = 0; j < custTrans.length; j++) {
+                    const t = custTrans[j];
                     if (t.date === targetDate) {
-                        if (t.type === 'pay') targetDatePaidSum += Number(t.amount);
-                        if (t.type === 'debt') targetDateDebtSum += Number(t.amount);
+                        if (t.type === 'pay') targetDatePaidSum += Number(t.amount) || 0;
+                        if (t.type === 'debt') targetDateDebtSum += Number(t.amount) || 0;
                     }
-                });
-            });
-
-            const targetDateTotalSum = targetDatePaidSum + targetDateDebtSum;
-
-            // تحديث بطاقات الإحصائيات العلوية بقيم الفلترة الحالية
-            document.getElementById('logsStatTotalOriginal').innerText = window.formatCurr(filteredTotalOriginal);
-            document.getElementById('logsStatTotalPaid').innerText = window.formatCurr(filteredTotalPaid);
-            document.getElementById('logsStatTotalRemaining').innerText = window.formatCurr(filteredTotalRemaining);
-            document.getElementById('logsStatTodayPaid').innerText = window.formatCurr(targetDatePaidSum);
-            document.getElementById('logsStatTodayDebt').innerText = window.formatCurr(targetDateDebtSum);
-            document.getElementById('logsStatTodayTotal').innerText = window.formatCurr(targetDateTotalSum);
-
-            if (list.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-slate-400 py-8 font-bold text-base">لا توجد سجلات مطابقة لخيارات البحث أو الفلترة والتاريخ المحدد.</td></tr>`;
-                return;
-            }
-
-            let htmlRows = '';
-            list.forEach(cust => {
-                const custTrans = window.transactions.filter(t => t.customerId === cust.id);
-                const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
-                const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
-                const remaining = debtSum - paySum;
-                const updatedOnDate = isCustomerUpdatedOnDate(cust.id, targetDate);
+                }
 
                 htmlRows += `
                     <tr class="hover:bg-slate-700/40 ${updatedOnDate ? 'bg-amber-500/5' : ''}">
@@ -1624,13 +1742,35 @@
                         </td>
                     </tr>
                 `;
-            });
+            }
+
+            const targetDateTotalSum = targetDatePaidSum + targetDateDebtSum;
+
+            document.getElementById('logsStatTotalOriginal').innerText = window.formatCurr(filteredTotalOriginal);
+            document.getElementById('logsStatTotalPaid').innerText = window.formatCurr(filteredTotalPaid);
+            document.getElementById('logsStatTotalRemaining').innerText = window.formatCurr(filteredTotalRemaining);
+            document.getElementById('logsStatTodayPaid').innerText = window.formatCurr(targetDatePaidSum);
+            document.getElementById('logsStatTodayDebt').innerText = window.formatCurr(targetDateDebtSum);
+            document.getElementById('logsStatTodayTotal').innerText = window.formatCurr(targetDateTotalSum);
+
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-slate-400 py-8 font-bold text-base">لا توجد سجلات مطابقة لخيارات البحث أو الفلترة والتاريخ المحدد.</td></tr>`;
+                return;
+            }
+
             tbody.innerHTML = htmlRows;
+        };
+
+        function formatPourDetailsHtml(trx) {
+            const pumpText = (trx.pumpFee && Number(trx.pumpFee) > 0)
+                ? ` | <b>أجرة المضخة:</b> ${window.formatCurr(trx.pumpFee)}`
+                : '';
+            return `<b>المقاومة:</b> ${trx.pourType || 'C30'} | <b>المكعبات:</b> ${trx.quantity || '-'} | <b>سعر المكعب:</b> ${trx.price ? window.formatCurr(trx.price) : '-'}${pumpText}<br>`;
         }
 
         window.openCustomerDetailsModal = function(custID) {
             window.activeDetailCustId = custID;
-            const cust = window.customers.find(c => c.id === custID);
+            const cust = window.customerMap.get(custID);
             if (!cust) return;
 
             document.getElementById('detailCustName').innerText = cust.name;
@@ -1646,7 +1786,7 @@
 
         window.renderCustomerDetailsContent = function() {
             if (!window.activeDetailCustId) return;
-            const cust = window.customers.find(c => c.id === window.activeDetailCustId);
+            const cust = window.customerMap.get(window.activeDetailCustId);
             if (!cust) return;
 
             const typeFilter = document.getElementById('detailTypeFilter').value;
@@ -1654,31 +1794,28 @@
             const sortOrder = document.getElementById('detailSortOrder').value;
             const body = document.getElementById('detailModalBody');
 
-            let allCustTrans = window.transactions.filter(t => t.customerId === cust.id);
-            let custCalls = window.calls.filter(c => c.customerId === cust.id);
+            const allCustTrans = window.txByCustomer.get(cust.id) || [];
+            const custCalls = window.callsByCustomer.get(cust.id) || [];
+            const { debtSum: totalDebt, paySum: totalPay, remaining: overallRemaining } = getCustomerSummary(cust.id);
 
-            const totalDebt = allCustTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
-            const totalPay = allCustTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
-            const overallRemaining = totalDebt - totalPay;
-
-            let filteredTrans = [...allCustTrans];
-
-            if (typeFilter === 'pay') filteredTrans = filteredTrans.filter(t => t.type === 'pay');
-            if (typeFilter === 'debt') filteredTrans = filteredTrans.filter(t => t.type === 'debt');
-
+            let filteredTrans = [];
             const now = new Date();
             const todayStr = now.toISOString().split('T')[0];
             const currentYear = now.getFullYear();
             const currentMonth = now.getMonth();
 
-            if (timeFilter !== 'all') {
-                filteredTrans = filteredTrans.filter(t => {
+            for (let i = 0; i < allCustTrans.length; i++) {
+                const t = allCustTrans[i];
+                if (typeFilter === 'pay' && t.type !== 'pay') continue;
+                if (typeFilter === 'debt' && t.type !== 'debt') continue;
+
+                if (timeFilter !== 'all') {
                     const tDate = new Date(t.date);
-                    if (timeFilter === 'today') return t.date === todayStr;
-                    if (timeFilter === 'month') return tDate.getFullYear() === currentYear && tDate.getMonth() === currentMonth;
-                    if (timeFilter === 'year') return tDate.getFullYear() === currentYear;
-                    return true;
-                });
+                    if (timeFilter === 'today' && t.date !== todayStr) continue;
+                    if (timeFilter === 'month' && (tDate.getFullYear() !== currentYear || tDate.getMonth() !== currentMonth)) continue;
+                    if (timeFilter === 'year' && tDate.getFullYear() !== currentYear) continue;
+                }
+                filteredTrans.push(t);
             }
 
             filteredTrans.sort((a, b) => {
@@ -1688,12 +1825,13 @@
 
             let runningBal = 0;
             const chronoTrans = [...allCustTrans].sort((a, b) => new Date(a.date) - new Date(b.date));
-            const balanceMap = {};
-            chronoTrans.forEach(t => {
-                if (t.type === 'debt') runningBal += Number(t.amount);
-                else runningBal -= Number(t.amount);
-                balanceMap[t.id] = runningBal;
-            });
+            const balanceMap = new Map();
+            for (let i = 0; i < chronoTrans.length; i++) {
+                const t = chronoTrans[i];
+                if (t.type === 'debt') runningBal += Number(t.amount) || 0;
+                else runningBal -= Number(t.amount) || 0;
+                balanceMap.set(t.id, runningBal);
+            }
 
             let htmlContent = `
                 <div class="flex flex-wrap justify-between items-center bg-slate-900 p-4 rounded-xl border border-slate-700 text-sm font-black gap-2 shadow-inner">
@@ -1730,11 +1868,11 @@
                                                 ${t.type === 'debt' ? 'عملية صب (+)' : 'عملية تسديد (-)'}
                                             </td>
                                             <td class="p-3 text-slate-200 font-semibold">
-                                                ${t.type === 'debt' ? `<b>نوع الكونكريت:</b> ${t.pourType || 'C30'} | <b>الكمية:</b> ${t.quantity || '-'} | <b>السعر:</b> ${t.price ? window.formatCurr(t.price) : '-'}<br>` : ''}
+                                                ${t.type === 'debt' ? formatPourDetailsHtml(t) : ''}
                                                 <b>ملاحظات:</b> ${t.note || '-'}
                                             </td>
                                             <td class="p-3 font-black text-white">${window.formatCurr(t.amount)}</td>
-                                            <td class="p-3 font-black text-amber-400">${window.formatCurr(balanceMap[t.id])}</td>
+                                            <td class="p-3 font-black text-amber-400">${window.formatCurr(balanceMap.get(t.id) || 0)}</td>
                                             <td class="p-3 text-center">
                                                 <button onclick="printSingleTransactionReceipt('${t.id}')" class="bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-600 px-3 py-1.5 rounded-lg text-xs font-black transition">
                                                     <i class="fa-solid fa-print"></i> طباعة الوصل
@@ -1795,7 +1933,7 @@
                     <div class="pt-3 flex justify-between items-end text-sm font-black text-black border-t-2 border-black mt-3 pt-2">
                         <div class="text-right space-y-1">
                             <p class="text-base">اسم الزبون: <span class="text-lg font-black underline">${cust.name}</span></p>
-                            <p>رقم الهاتف: <span>077301508888</span> | العنوان: <span>${cust.address || 'غير محدد'}</span></p>
+                            <p>رقم الهاتف: <span>${cust.phone || '077301508888'}</span> | العنوان: <span>${cust.address || 'غير محدد'}</span></p>
                         </div>
                         <div class="text-left space-y-1">
                             <p>التاريخ: <span>${dateStr}</span></p>
@@ -1807,20 +1945,22 @@
         }
 
         window.printSingleTransactionReceipt = function(trxId) {
-            const trx = window.transactions.find(t => t.id === trxId);
+            const trx = window.transactionMap.get(trxId);
             if (!trx) return;
 
-            const cust = window.customers.find(c => c.id === trx.customerId);
-            const allTrans = window.transactions.filter(t => t.customerId === cust.id);
+            const cust = window.customerMap.get(trx.customerId);
+            if (!cust) return;
+            const allTrans = window.txByCustomer.get(cust.id) || [];
             const chronoTrans = [...allTrans].sort((a, b) => new Date(a.date) - new Date(b.date));
 
             let runningBal = 0;
             let currentBalAtTrx = 0;
-            chronoTrans.forEach(t => {
-                if (t.type === 'debt') runningBal += Number(t.amount);
-                else runningBal -= Number(t.amount);
+            for (let i = 0; i < chronoTrans.length; i++) {
+                const t = chronoTrans[i];
+                if (t.type === 'debt') runningBal += Number(t.amount) || 0;
+                else runningBal -= Number(t.amount) || 0;
                 if (t.id === trx.id) currentBalAtTrx = runningBal;
-            });
+            }
 
             document.getElementById('printSignCustomer').innerText = `توقيع الزبون (${cust.name}): ....................................`;
 
@@ -1845,7 +1985,7 @@
                             <tr class="text-black font-black text-base">
                                 <td class="border-2 border-black p-3.5 text-center">1</td>
                                 <td class="border-2 border-black p-3.5">
-                                    ${trx.type === 'debt' ? `<b>نوع الكونكريت:</b> ${trx.pourType || 'C30'} | <b>الكمية:</b> ${trx.quantity || '-'} | <b>السعر:</b> ${trx.price ? window.formatCurr(trx.price) : '-'}<br>` : ''}
+                                    ${trx.type === 'debt' ? formatPourDetailsHtml(trx) : ''}
                                     <b>ملاحظات:</b> ${trx.note || docType}
                                 </td>
                                 <td class="border-2 border-black p-3.5">
@@ -1866,7 +2006,7 @@
 
         window.printFilteredCustomerStatement = function() {
             if (!window.activeDetailCustId) return;
-            const cust = window.customers.find(c => c.id === window.activeDetailCustId);
+            const cust = window.customerMap.get(window.activeDetailCustId);
             if (!cust) return;
 
             document.getElementById('printSignCustomer').innerText = `توقيع الزبون (${cust.name}): ....................................`;
@@ -1875,25 +2015,26 @@
             const timeFilter = document.getElementById('detailTimeFilter').value;
             const sortOrder = document.getElementById('detailSortOrder').value;
 
-            let allCustTrans = window.transactions.filter(t => t.customerId === cust.id);
-            let filteredTrans = [...allCustTrans];
-
-            if (typeFilter === 'pay') filteredTrans = filteredTrans.filter(t => t.type === 'pay');
-            if (typeFilter === 'debt') filteredTrans = filteredTrans.filter(t => t.type === 'debt');
+            const allCustTrans = window.txByCustomer.get(cust.id) || [];
+            let filteredTrans = [];
 
             const now = new Date();
             const todayStr = now.toISOString().split('T')[0];
             const currentYear = now.getFullYear();
             const currentMonth = now.getMonth();
 
-            if (timeFilter !== 'all') {
-                filteredTrans = filteredTrans.filter(t => {
+            for (let i = 0; i < allCustTrans.length; i++) {
+                const t = allCustTrans[i];
+                if (typeFilter === 'pay' && t.type !== 'pay') continue;
+                if (typeFilter === 'debt' && t.type !== 'debt') continue;
+
+                if (timeFilter !== 'all') {
                     const tDate = new Date(t.date);
-                    if (timeFilter === 'today') return t.date === todayStr;
-                    if (timeFilter === 'month') return tDate.getFullYear() === currentYear && tDate.getMonth() === currentMonth;
-                    if (timeFilter === 'year') return tDate.getFullYear() === currentYear;
-                    return true;
-                });
+                    if (timeFilter === 'today' && t.date !== todayStr) continue;
+                    if (timeFilter === 'month' && (tDate.getFullYear() !== currentYear || tDate.getMonth() !== currentMonth)) continue;
+                    if (timeFilter === 'year' && tDate.getFullYear() !== currentYear) continue;
+                }
+                filteredTrans.push(t);
             }
 
             filteredTrans.sort((a, b) => {
@@ -1903,16 +2044,15 @@
 
             let runningBal = 0;
             const chronoTrans = [...allCustTrans].sort((a, b) => new Date(a.date) - new Date(b.date));
-            const balanceMap = {};
-            chronoTrans.forEach(t => {
-                if (t.type === 'debt') runningBal += Number(t.amount);
-                else runningBal -= Number(t.amount);
-                balanceMap[t.id] = runningBal;
-            });
+            const balanceMap = new Map();
+            for (let i = 0; i < chronoTrans.length; i++) {
+                const t = chronoTrans[i];
+                if (t.type === 'debt') runningBal += Number(t.amount) || 0;
+                else runningBal -= Number(t.amount) || 0;
+                balanceMap.set(t.id, runningBal);
+            }
 
-            const totalDebt = allCustTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
-            const totalPay = allCustTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
-            const remaining = totalDebt - totalPay;
+            const { debtSum: totalDebt, paySum: totalPay, remaining } = getCustomerSummary(cust.id);
 
             let docTypeTitle = 'كشف حساب تفصيلي كامل';
             if (typeFilter === 'pay') docTypeTitle = 'كشف عمليات التسديد والمقبوضات';
@@ -1939,12 +2079,12 @@
                                     <td class="border-2 border-black p-3 text-center font-black">${i + 1}</td>
                                     <td class="border-2 border-black p-3 font-mono">${t.date}</td>
                                     <td class="border-2 border-black p-3">
-                                        ${t.type === 'debt' ? `<b>نوع الكونكريت:</b> ${t.pourType || 'C30'} | <b>كمية:</b> ${t.quantity || '-'} | <b>سعر:</b> ${t.price ? window.formatCurr(t.price) : '-'}<br>` : ''}
+                                        ${t.type === 'debt' ? formatPourDetailsHtml(t) : ''}
                                         ${t.note || '-'}
                                     </td>
                                     <td class="border-2 border-black p-3 font-black">${t.type === 'debt' ? 'عملية صب (+)' : 'عملية تسديد (-)'}</td>
                                     <td class="border-2 border-black p-3 font-black">${window.formatCurr(t.amount)}</td>
-                                    <td class="border-2 border-black p-3 font-black">${window.formatCurr(balanceMap[t.id])}</td>
+                                    <td class="border-2 border-black p-3 font-black">${window.formatCurr(balanceMap.get(t.id) || 0)}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -1983,24 +2123,22 @@
             const printBody = document.getElementById('printBody');
             let rows = '';
 
-            window.customers.forEach((cust, i) => {
-                const custTrans = window.transactions.filter(t => t.customerId === cust.id);
-                const debtSum = custTrans.filter(t => t.type === 'debt').reduce((acc, c) => acc + Number(c.amount), 0);
-                const paySum = custTrans.filter(t => t.type === 'pay').reduce((acc, c) => acc + Number(c.amount), 0);
-                const remaining = debtSum - paySum;
+            for (let i = 0; i < window.customers.length; i++) {
+                const cust = window.customers[i];
+                const { debtSum, paySum, remaining } = getCustomerSummary(cust.id);
 
                 rows += `
                     <tr class="font-bold text-black text-sm">
                         <td class="border-2 border-black p-3 text-center font-black">${i + 1}</td>
                         <td class="border-2 border-black p-3 font-black text-base">${cust.name}</td>
-                        <td class="border-2 border-black p-3 font-mono">077301508888</td>
+                        <td class="border-2 border-black p-3 font-mono">${cust.phone || '077301508888'}</td>
                         <td class="border-2 border-black p-3">${cust.address || '-'}</td>
                         <td class="border-2 border-black p-3">${window.formatCurr(debtSum)}</td>
                         <td class="border-2 border-black p-3">${window.formatCurr(paySum)}</td>
                         <td class="border-2 border-black p-3 font-black">${window.formatCurr(remaining)}</td>
                     </tr>
                 `;
-            });
+            }
 
             printBody.innerHTML = `
                 <div class="text-center border-b-4 border-black pb-4 mb-6 space-y-1">

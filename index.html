@@ -91,7 +91,7 @@
                 </button>
             </div>
 
-            <!-- بجانب تبويب السجلات والتقارير: تحديث الكونكريت وتحديث التسديد (حقل التاريخ القابل للتغيير في الأسفل فقط) -->
+            <!-- بجانب تبويب السجلات والتقارير: تحديث الكونكريت وتحديث التسديد -->
             <div class="flex flex-wrap items-center gap-2.5 py-2 px-2">
                 <div class="flex flex-col bg-slate-800/90 border border-rose-500/40 rounded-xl px-3 py-1.5 shadow">
                     <label for="lastPourUpdateDate" class="text-[11px] font-black text-rose-400 flex items-center gap-1 cursor-pointer">
@@ -184,7 +184,7 @@
                 <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-700 pb-4">
                     <div>
                         <h2 class="text-xl font-black text-white">إدارة وحسابات الزبائن</h2>
-                        <p class="text-sm text-slate-300 font-semibold">إضافة زبون جديد ومتابعة المبلغ الكلي، المسدد، والمتبقي لكل زبون</p>
+                        <p class="text-sm text-slate-300 font-semibold">إضافة زبون جديد ومتابعة المبلغ الكلي، المسدد، والمتبقي، وملاحظات المكالمات لكل زبون</p>
                     </div>
                     <button onclick="openAddCustomerModal()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-base px-5 py-3 rounded-xl flex items-center gap-2 shadow-lg transition">
                         <i class="fa-solid fa-user-plus text-lg"></i> إضافة زبون جديد
@@ -195,7 +195,7 @@
                 <div class="flex flex-wrap items-center gap-4 bg-slate-900 p-4 rounded-xl border border-slate-700">
                     <div class="flex-1 min-w-[220px] relative">
                         <i class="fa-solid fa-magnifying-glass absolute right-4 top-3.5 text-slate-400"></i>
-                        <input type="text" id="custSearchInput" oninput="debouncedRenderCustomersTable()" placeholder="ابحث باسم الزبون، رقم الهاتف، أو العنوان..." class="w-full bg-slate-800 border border-slate-700 rounded-xl pr-11 pl-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
+                        <input type="text" id="custSearchInput" oninput="debouncedRenderCustomersTable()" placeholder="ابحث باسم الزبون، رقم الهاتف، العنوان، أو الملاحظات..." class="w-full bg-slate-800 border border-slate-700 rounded-xl pr-11 pl-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
                     </div>
                     <div>
                         <select id="custFilterBalance" onchange="toggleCustDateInput(); renderCustomersTable()" class="bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
@@ -231,7 +231,7 @@
                                 <th class="p-3.5 text-rose-400">المبلغ الكلي</th>
                                 <th class="p-3.5 text-emerald-400">المبلغ المسدد</th>
                                 <th class="p-3.5 text-amber-400">المبلغ المتبقي</th>
-                                <th class="p-3.5">ملاحظات</th>
+                                <th class="p-3.5">الملاحظات</th>
                                 <th class="p-3.5 text-center">إجراءات</th>
                             </tr>
                         </thead>
@@ -295,7 +295,7 @@
             <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl p-6 shadow-xl space-y-6">
                 <div>
                     <h2 class="text-xl font-black text-white mb-1">مركز الاتصالات والإجراءات المباشرة</h2>
-                    <p class="text-sm text-slate-300 font-semibold">ابحث عن الزبون لتنفيذ عمليات إضافة صب، تسديد، أو تدوين المكالمات المباشرة</p>
+                    <p class="text-sm text-slate-300 font-semibold">ابحث عن الزبون لتنفيذ عمليات إضافة صب، تسديد، أو تدوين المكالمات المباشرة (لا يُطلب رمز عند التسديد أو المكالمة بعد اختيار الزبون)</p>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-4">
@@ -331,7 +331,7 @@
                             <i class="fa-solid fa-receipt text-xl"></i> تسديد دين وطباعة وصل
                         </button>
                         <button onclick="openCallModal()" class="bg-sky-600 hover:bg-sky-700 text-white font-black text-base p-4 rounded-xl flex items-center justify-center gap-2 transition shadow-lg">
-                            <i class="fa-solid fa-phone text-xl"></i> تسجيل مكالمة / موعد
+                            <i class="fa-solid fa-phone text-xl"></i> إجراء مكالمة / موعد
                         </button>
                     </div>
                 </div>
@@ -669,8 +669,11 @@
             </div>
             <form onsubmit="handleRecordCall(event)" class="space-y-4 text-base font-bold">
                 <div>
-                    <label class="block text-sm text-slate-300 mb-1">موعد التسديد المتفق عليه (إن وجد)</label>
+                    <label class="block text-sm text-slate-300 mb-1">
+                        التاريخ / موعد التسديد المتفق عليه <span class="text-xs text-amber-400 font-semibold">(غير إجباري)</span>
+                    </label>
                     <input type="date" id="callTargetDate" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white">
+                    <p class="text-[11px] text-slate-400 mt-1 font-semibold">يمكن تركه فارغاً؛ سيُعتمد تاريخ اليوم لتسجيل المكالمة وتبقى خانة الموعد غير محددة.</p>
                 </div>
                 <div>
                     <label class="block text-sm text-slate-300 mb-1">نتيجة المكالمة / الملاحظات *</label>
@@ -724,9 +727,9 @@
         const analytics = getAnalytics(app);
         const db = getDatabase(app);
 
-        // الرمز السري المعتمد للتعديل والإدارة والحذف (المشاهدة فقط بدون رمز)
+        // الرمز السري المعتمد للإدارة والتعديل والحذف والاستيراد
         const SECRET_PIN = "1965";
-        let unlockedEditIds = new Set();
+        let unlockedManagementIds = new Set();
 
         function verifySecretPin(actionLabel = "هذا الإجراء") {
             const entered = prompt(`يتطلب (${actionLabel}) إدخال الرمز السري:`);
@@ -734,6 +737,19 @@
             if (entered.trim() !== SECRET_PIN) {
                 alert("الرمز السري غير صحيح!");
                 return false;
+            }
+            return true;
+        }
+
+        function ensureManagementUnlocked(custID, actionLabel) {
+            if (custID && unlockedManagementIds.has(custID)) {
+                return true;
+            }
+            if (!verifySecretPin(actionLabel)) {
+                return false;
+            }
+            if (custID) {
+                unlockedManagementIds.add(custID);
             }
             return true;
         }
@@ -747,7 +763,7 @@
             return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
         }
 
-        // حفظ واسترجاع تاريخ تحديث الكونكريت وتحديث التسديد (يدوياً + مزامنة اختيارية)
+        // حفظ واسترجاع تاريخ تحديث الكونكريت وتحديث التسديد
         window.saveManualUpdateDates = function() {
             const pourDate = document.getElementById('lastPourUpdateDate')?.value || '';
             const payDate = document.getElementById('lastPaymentUpdateDate')?.value || '';
@@ -783,7 +799,7 @@
             });
         }
 
-        // Core datasets & pre-indexed lookup maps for O(1) / O(N) lightweight queries
+        // Core datasets & pre-indexed lookup maps
         window.customers = [];
         window.transactions = [];
         window.calls = [];
@@ -793,6 +809,7 @@
         window.callsByCustomer = new Map();
         window.customerSummaryMap = new Map();
         window.latestActivityMap = new Map();
+        window.latestCallMap = new Map();
         window.selectedCustomerId = null;
         window.activeDetailCustId = null;
         window.pourTargetCustomerId = null;
@@ -800,7 +817,6 @@
         let isUIUpdating = false;
         let currentActiveTab = 'overview';
 
-        // Helper for lightweight debounce (~120ms) on search inputs
         function createDebounce(fn, delay = 120) {
             let timerId = null;
             return function(...args) {
@@ -809,7 +825,6 @@
             };
         }
 
-        // Rebuild pre-indexed maps whenever snapshots arrive
         function rebuildIndexes() {
             const custMap = new Map();
             const txMap = new Map();
@@ -817,6 +832,7 @@
             const callsByCust = new Map();
             const summaryMap = new Map();
             const latestMap = new Map();
+            const latestCall = new Map();
 
             for (let i = 0; i < window.customers.length; i++) {
                 const c = window.customers[i];
@@ -860,7 +876,6 @@
                 }
             }
 
-            // Precompute debtSum, paySum, remaining per customer once per snapshot update
             for (let i = 0; i < window.customers.length; i++) {
                 const c = window.customers[i];
                 const cTrans = txByCust.get(c.id) || [];
@@ -876,6 +891,16 @@
                     paySum,
                     remaining: debtSum - paySum
                 });
+
+                const cCalls = callsByCust.get(c.id) || [];
+                if (cCalls.length > 0) {
+                    const sortedCalls = [...cCalls].sort((a, b) => {
+                        const aKey = `${a.date || ''} ${a.id || ''}`;
+                        const bKey = `${b.date || ''} ${b.id || ''}`;
+                        return bKey.localeCompare(aKey);
+                    });
+                    latestCall.set(c.id, sortedCalls[0]);
+                }
             }
 
             window.customerMap = custMap;
@@ -884,10 +909,25 @@
             window.callsByCustomer = callsByCust;
             window.customerSummaryMap = summaryMap;
             window.latestActivityMap = latestMap;
+            window.latestCallMap = latestCall;
         }
 
         function getCustomerSummary(custId) {
             return window.customerSummaryMap.get(custId) || { debtSum: 0, paySum: 0, remaining: 0 };
+        }
+
+        function getCustomerDisplayNotes(cust) {
+            const lastCall = window.latestCallMap.get(cust.id);
+            const parts = [];
+            if (lastCall && lastCall.note) {
+                const callDateLabel = lastCall.date ? ` (${formatNumericDMY(lastCall.date)})` : '';
+                const targetLabel = lastCall.targetDate ? ` [موعد: ${formatNumericDMY(lastCall.targetDate)}]` : '';
+                parts.push(`مكالمة${callDateLabel}: ${lastCall.note}${targetLabel}`);
+            }
+            if (cust.notes && cust.notes.trim()) {
+                parts.push(cust.notes.trim());
+            }
+            return parts.length > 0 ? parts.join(' — ') : '-';
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -936,7 +976,6 @@
             });
         }
 
-        // Render only the currently active tab (and open modal if visible) for maximum lightness
         window.refreshUI = function() {
             if (currentActiveTab === 'overview') {
                 renderOverview();
@@ -987,7 +1026,6 @@
             return Number(num || 0).toLocaleString('ar-IQ') + ' د.ع';
         };
 
-        // Debounced search triggers
         window.debouncedRenderOverview = createDebounce(() => renderOverview(), 120);
         window.debouncedRenderCustomersTable = createDebounce(() => renderCustomersTable(), 120);
         window.debouncedRenderLogsSummaryTable = createDebounce(() => renderLogsSummaryTable(), 120);
@@ -1097,10 +1135,7 @@
             const cust = window.customerMap.get(custID);
             if (!cust) return;
 
-            if (!unlockedEditIds.has(custID)) {
-                if (!verifySecretPin(`تعديل بيانات الزبون (${cust.name})`)) return;
-                unlockedEditIds.add(custID);
-            }
+            if (!ensureManagementUnlocked(custID, `تعديل بيانات الزبون (${cust.name})`)) return;
 
             document.getElementById('customerModalTitle').innerText = 'تعديل بيانات الزبون الحسابية والأساسية';
             document.getElementById('editCustId').value = cust.id;
@@ -1237,7 +1272,7 @@
             const cust = window.customerMap.get(custID);
             if (!cust) return;
 
-            if (!verifySecretPin(`حذف الزبون (${cust.name})`)) return;
+            if (!ensureManagementUnlocked(custID, `حذف الزبون (${cust.name})`)) return;
 
             if (confirm(`هل أنت متأكد من حذف الزبون (${cust.name}) وكافة مبالغه، ديونه، وسجلاته نهائياً؟`)) {
                 remove(ref(db, 'qaleb_debts/customers/' + custID));
@@ -1247,6 +1282,8 @@
 
                 const cCalls = window.callsByCustomer.get(custID) || [];
                 cCalls.forEach(c => remove(ref(db, 'qaleb_debts/calls/' + c.id)));
+
+                unlockedManagementIds.delete(custID);
 
                 if (window.selectedCustomerId === custID) {
                     window.selectedCustomerId = null;
@@ -1314,11 +1351,14 @@
             let list = [];
             for (let i = 0; i < window.customers.length; i++) {
                 const cust = window.customers[i];
+                const displayNotes = getCustomerDisplayNotes(cust);
+
                 if (search) {
                     const nameMatch = (cust.name || '').toLowerCase().includes(search);
                     const phoneMatch = (cust.phone || '').toLowerCase().includes(search);
                     const addressMatch = (cust.address || '').toLowerCase().includes(search);
-                    if (!nameMatch && !phoneMatch && !addressMatch) continue;
+                    const notesMatch = displayNotes.toLowerCase().includes(search);
+                    if (!nameMatch && !phoneMatch && !addressMatch && !notesMatch) continue;
                 }
 
                 const { remaining } = getCustomerSummary(cust.id);
@@ -1352,6 +1392,7 @@
                 const cust = list[i];
                 const { debtSum, paySum, remaining } = getCustomerSummary(cust.id);
                 const updatedOnDate = isCustomerUpdatedOnDate(cust.id, targetDate);
+                const notesText = getCustomerDisplayNotes(cust);
 
                 rowsHtml += `
                     <tr class="hover:bg-slate-700/40 ${updatedOnDate ? 'bg-amber-500/5' : ''}">
@@ -1365,7 +1406,7 @@
                         <td class="p-3.5 font-black text-rose-400">${window.formatCurr(debtSum)}</td>
                         <td class="p-3.5 font-black text-emerald-400">${window.formatCurr(paySum)}</td>
                         <td class="p-3.5 font-black text-base ${remaining > 0 ? 'text-amber-400' : 'text-slate-300'}">${window.formatCurr(remaining)}</td>
-                        <td class="p-3.5 text-slate-300 text-xs font-bold max-w-xs truncate">${cust.notes || '-'}</td>
+                        <td class="p-3.5 text-slate-200 text-xs font-bold max-w-xs" title="${notesText.replace(/"/g, '&quot;')}">${notesText}</td>
                         <td class="p-3.5 text-center">
                             <div class="flex items-center justify-center gap-2">
                                 <button onclick="selectCustomerForAction('${cust.id}')" class="bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 border border-amber-500/50 px-3 py-1.5 rounded-lg text-xs font-black transition">
@@ -1408,7 +1449,7 @@
                     cust.name,
                     cust.phone,
                     cust.address || '',
-                    cust.notes || '',
+                    getCustomerDisplayNotes(cust) === '-' ? '' : getCustomerDisplayNotes(cust),
                     debtSum,
                     paySum,
                     remaining,
@@ -1572,7 +1613,7 @@
                         </div>
                         <div class="text-left flex items-center gap-4">
                             <span class="text-xs font-black ${remaining > 0 ? 'text-amber-400' : 'text-slate-400'}">المتبقي: ${window.formatCurr(remaining)}</span>
-                            <span class="text-sm text-amber-400 font-black">اختيار &larr;</span>
+                            <span class="text-sm text-amber-400 font-black">إدارة &larr;</span>
                         </div>
                     </div>
                 `;
@@ -1590,11 +1631,12 @@
             document.getElementById('actionCustRemaining').innerText = `المتبقي: ` + window.formatCurr(remaining);
         }
 
+        // يطلب الرمز عند الدخول أو الضغط على إدارة فقط
         window.selectCustomerForAction = function(custID) {
             const cust = window.customerMap.get(custID);
             if (!cust) return;
 
-            if (!verifySecretPin(`إدارة حساب الزبون (${cust.name})`)) return;
+            if (!ensureManagementUnlocked(custID, `إدارة حساب الزبون (${cust.name})`)) return;
 
             window.selectedCustomerId = custID;
             window.switchTab('actions');
@@ -1604,11 +1646,11 @@
             updateSelectedCustomerCard(custID);
         };
 
-        // Open Add Pour Modal for a specific customer ID (used by both Tab 3 and Tab 4 Details Modal)
+        // بعد فتح الإدارة لا يطلب رمز عند إضافة صب أو تسديد أو إجراء مكالمة
         window.openAddPourModalForCustomer = function(custID) {
             if (!custID) return;
             const cust = window.customerMap.get(custID);
-            if (!verifySecretPin(`إضافة صب للزبون (${cust ? cust.name : ''})`)) return;
+            if (!ensureManagementUnlocked(custID, `إضافة صب للزبون (${cust ? cust.name : ''})`)) return;
 
             window.pourTargetCustomerId = custID;
             document.getElementById('pourModalCustName').innerText = cust ? `الزبون: ${cust.name}` : '';
@@ -1650,13 +1692,17 @@
 
         window.openPayDebtModal = function() {
             if (!window.selectedCustomerId) return;
-            if (!verifySecretPin("تسديد دين")) return;
+            document.getElementById('payDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('payAmount').value = '';
+            document.getElementById('payNote').value = '';
             window.toggleModal('payDebtModal', true);
         };
 
         window.openCallModal = function() {
             if (!window.selectedCustomerId) return;
-            if (!verifySecretPin("تسجيل مكالمة أو موعد")) return;
+            document.getElementById('callTargetDate').value = '';
+            document.getElementById('callPresetNote').value = '';
+            document.getElementById('callCustomNote').value = '';
             window.toggleModal('callModal', true);
         };
 
@@ -1727,6 +1773,7 @@
             });
         };
 
+        // التاريخ غير إجباري في نافذة المكالمة
         window.handleRecordCall = function(e) {
             e.preventDefault();
             const submitBtn = document.getElementById('callSubmitBtn');
@@ -1734,11 +1781,14 @@
             submitBtn.disabled = true;
 
             const callId = 'CALL_' + Date.now();
+            const enteredDate = document.getElementById('callTargetDate').value || '';
+            const todayStr = new Date().toISOString().split('T')[0];
+
             const newCall = {
                 id: callId,
                 customerId: window.selectedCustomerId,
-                date: new Date().toISOString().split('T')[0],
-                targetDate: document.getElementById('callTargetDate').value,
+                date: todayStr,
+                targetDate: enteredDate,
                 note: document.getElementById('callCustomNote').value.trim()
             };
 
@@ -1868,14 +1918,13 @@
             return `<b>المقاومة:</b> ${trx.pourType || 'C30'} | <b>المكعبات:</b> ${trx.quantity || '-'} | <b>سعر المكعب:</b> ${trx.price ? window.formatCurr(trx.price) : '-'}${pumpText}<br>`;
         }
 
-        // المشاهدة مفتوحة بدون رمز سري
         window.openCustomerDetailsModal = function(custID) {
             window.activeDetailCustId = custID;
             const cust = window.customerMap.get(custID);
             if (!cust) return;
 
             document.getElementById('detailCustName').innerText = cust.name;
-            document.getElementById('detailCustSub').innerText = `رقم الهاتف: ${cust.phone} | العنوان: ${cust.address || 'غير محدد'} | ملاحظات: ${cust.notes || 'لا يوجد'}`;
+            document.getElementById('detailCustSub').innerText = `رقم الهاتف: ${cust.phone} | العنوان: ${cust.address || 'غير محدد'} | ملاحظات: ${getCustomerDisplayNotes(cust)}`;
             
             document.getElementById('detailTypeFilter').value = 'all';
             document.getElementById('detailTimeFilter').value = 'all';

@@ -75,19 +75,38 @@
 
     <!-- Main Navigation Tabs -->
     <nav class="bg-slate-900 border-b border-slate-700 no-print">
-        <div class="max-w-7xl mx-auto flex overflow-x-auto text-base font-extrabold">
-            <button onclick="switchTab('overview')" id="tab-overview" class="tab-btn active border-b-4 border-amber-500 text-amber-400 py-4 px-7 flex items-center gap-2 hover:bg-slate-800 transition">
-                <i class="fa-solid fa-chart-pie text-lg"></i> 1. نظرة عامة
-            </button>
-            <button onclick="switchTab('customers')" id="tab-customers" class="tab-btn text-slate-300 py-4 px-7 flex items-center gap-2 hover:bg-slate-800 hover:text-white transition">
-                <i class="fa-solid fa-users text-lg"></i> 2. إدارة الزبائن
-            </button>
-            <button onclick="switchTab('actions')" id="tab-actions" class="tab-btn text-slate-300 py-4 px-7 flex items-center gap-2 hover:bg-slate-800 hover:text-white transition">
-                <i class="fa-solid fa-phone-volume text-lg"></i> 3. الاتصال والمواعيد
-            </button>
-            <button onclick="switchTab('logs')" id="tab-logs" class="tab-btn text-slate-300 py-4 px-7 flex items-center gap-2 hover:bg-slate-800 hover:text-white transition">
-                <i class="fa-solid fa-box-archive text-lg"></i> 4. السجلات والتقارير
-            </button>
+        <div class="max-w-7xl mx-auto flex flex-wrap lg:flex-nowrap items-center justify-between gap-3 px-2 lg:px-4">
+            <div class="flex overflow-x-auto text-base font-extrabold">
+                <button onclick="switchTab('overview')" id="tab-overview" class="tab-btn active border-b-4 border-amber-500 text-amber-400 py-4 px-6 flex items-center gap-2 hover:bg-slate-800 transition whitespace-nowrap">
+                    <i class="fa-solid fa-chart-pie text-lg"></i> 1. نظرة عامة
+                </button>
+                <button onclick="switchTab('customers')" id="tab-customers" class="tab-btn text-slate-300 py-4 px-6 flex items-center gap-2 hover:bg-slate-800 hover:text-white transition whitespace-nowrap">
+                    <i class="fa-solid fa-users text-lg"></i> 2. إدارة الزبائن
+                </button>
+                <button onclick="switchTab('actions')" id="tab-actions" class="tab-btn text-slate-300 py-4 px-6 flex items-center gap-2 hover:bg-slate-800 hover:text-white transition whitespace-nowrap">
+                    <i class="fa-solid fa-phone-volume text-lg"></i> 3. الاتصال والمواعيد
+                </button>
+                <button onclick="switchTab('logs')" id="tab-logs" class="tab-btn text-slate-300 py-4 px-6 flex items-center gap-2 hover:bg-slate-800 hover:text-white transition whitespace-nowrap">
+                    <i class="fa-solid fa-box-archive text-lg"></i> 4. السجلات والتقارير
+                </button>
+            </div>
+
+            <!-- بجانب تبويب السجلات والتقارير: تاريخ آخر تحديث للصب والتسديد (إدخال يدوي) -->
+            <div class="flex flex-wrap items-center gap-2.5 py-2 px-2">
+                <div class="flex flex-col bg-slate-800/90 border border-rose-500/40 rounded-xl px-3 py-1.5 shadow">
+                    <label for="lastPourUpdateDate" class="text-[11px] font-black text-rose-400 flex items-center gap-1">
+                        <i class="fa-solid fa-truck-ramp-box"></i> تاريخ آخر تحديث للصب
+                    </label>
+                    <input type="date" id="lastPourUpdateDate" onchange="saveManualUpdateDates()" class="bg-transparent text-xs font-extrabold text-white focus:outline-none mt-0.5 cursor-pointer">
+                </div>
+
+                <div class="flex flex-col bg-slate-800/90 border border-emerald-500/40 rounded-xl px-3 py-1.5 shadow">
+                    <label for="lastPaymentUpdateDate" class="text-[11px] font-black text-emerald-400 flex items-center gap-1">
+                        <i class="fa-solid fa-receipt"></i> تاريخ آخر تحديث للتسديد
+                    </label>
+                    <input type="date" id="lastPaymentUpdateDate" onchange="saveManualUpdateDates()" class="bg-transparent text-xs font-extrabold text-white focus:outline-none mt-0.5 cursor-pointer">
+                </div>
+            </div>
         </div>
     </nav>
 
@@ -705,6 +724,56 @@
         const analytics = getAnalytics(app);
         const db = getDatabase(app);
 
+        // الرمز السري المعتمد للتعديل والإدارة والحذف (المشاهدة فقط بدون رمز)
+        const SECRET_PIN = "1965";
+        let unlockedEditIds = new Set();
+
+        function verifySecretPin(actionLabel = "هذا الإجراء") {
+            const entered = prompt(`يتطلب (${actionLabel}) إدخال الرمز السري:`);
+            if (entered === null) return false;
+            if (entered.trim() !== SECRET_PIN) {
+                alert("الرمز السري غير صحيح!");
+                return false;
+            }
+            return true;
+        }
+
+        // حفظ واسترجاع تاريخ آخر تحديث للصب والتسديد (يدوياً + مزامنة اختيارية)
+        window.saveManualUpdateDates = function() {
+            const pourDate = document.getElementById('lastPourUpdateDate')?.value || '';
+            const payDate = document.getElementById('lastPaymentUpdateDate')?.value || '';
+            try {
+                localStorage.setItem('qaleb_manual_pour_date', pourDate);
+                localStorage.setItem('qaleb_manual_pay_date', payDate);
+            } catch (e) {}
+            set(ref(db, 'qaleb_debts/meta/lastUpdates'), {
+                lastPourDate: pourDate,
+                lastPaymentDate: payDate
+            }).catch(() => {});
+        };
+
+        function loadManualUpdateDates() {
+            try {
+                const localPour = localStorage.getItem('qaleb_manual_pour_date');
+                const localPay = localStorage.getItem('qaleb_manual_pay_date');
+                if (localPour) document.getElementById('lastPourUpdateDate').value = localPour;
+                if (localPay) document.getElementById('lastPaymentUpdateDate').value = localPay;
+            } catch (e) {}
+
+            onValue(ref(db, 'qaleb_debts/meta/lastUpdates'), (snapshot) => {
+                const meta = snapshot.val();
+                if (!meta) return;
+                const pourEl = document.getElementById('lastPourUpdateDate');
+                const payEl = document.getElementById('lastPaymentUpdateDate');
+                if (meta.lastPourDate && pourEl && document.activeElement !== pourEl) {
+                    pourEl.value = meta.lastPourDate;
+                }
+                if (meta.lastPaymentDate && payEl && document.activeElement !== payEl) {
+                    payEl.value = meta.lastPaymentDate;
+                }
+            });
+        }
+
         // Core datasets & pre-indexed lookup maps for O(1) / O(N) lightweight queries
         window.customers = [];
         window.transactions = [];
@@ -820,6 +889,7 @@
             document.getElementById('logsTargetDateInput').value = todayStr;
             document.getElementById('currentDateDisplay').innerText = new Date().toLocaleDateString('ar-IQ', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             
+            loadManualUpdateDates();
             initFirebaseListeners();
         });
 
@@ -1014,6 +1084,11 @@
             const cust = window.customerMap.get(custID);
             if (!cust) return;
 
+            if (!unlockedEditIds.has(custID)) {
+                if (!verifySecretPin(`تعديل بيانات الزبون (${cust.name})`)) return;
+                unlockedEditIds.add(custID);
+            }
+
             document.getElementById('customerModalTitle').innerText = 'تعديل بيانات الزبون الحسابية والأساسية';
             document.getElementById('editCustId').value = cust.id;
             document.getElementById('custName').value = cust.name;
@@ -1149,13 +1224,7 @@
             const cust = window.customerMap.get(custID);
             if (!cust) return;
 
-            const password = prompt("هذا الإجراء يتطلب صلاحية المدير. يرجى إدخال كلمة المرور للحذف:");
-            if (password === null) return;
-            
-            if (password !== "1965") {
-                alert("كلمة المرور غير صحيحة! تم إلغاء عملية الحذف.");
-                return;
-            }
+            if (!verifySecretPin(`حذف الزبون (${cust.name})`)) return;
 
             if (confirm(`هل أنت متأكد من حذف الزبون (${cust.name}) وكافة مبالغه، ديونه، وسجلاته نهائياً؟`)) {
                 remove(ref(db, 'qaleb_debts/customers/' + custID));
@@ -1301,7 +1370,7 @@
                 `;
             }
             tbody.innerHTML = rowsHtml;
-        }
+        };
 
         // ================= Optimized Single-Sheet Excel Export & Import =================
         window.exportSingleSheetExcel = function() {
@@ -1357,6 +1426,11 @@
         };
 
         window.handleSingleSheetExcelImport = function(event) {
+            if (!verifySecretPin("استيراد البيانات وتعديل السجلات")) {
+                event.target.value = '';
+                return;
+            }
+
             const file = event.target.files[0];
             if (!file) return;
 
@@ -1504,10 +1578,12 @@
         }
 
         window.selectCustomerForAction = function(custID) {
-            window.selectedCustomerId = custID;
             const cust = window.customerMap.get(custID);
             if (!cust) return;
 
+            if (!verifySecretPin(`إدارة حساب الزبون (${cust.name})`)) return;
+
+            window.selectedCustomerId = custID;
             window.switchTab('actions');
             document.getElementById('selectedCustomerCard').classList.remove('hidden');
             document.getElementById('actionSearchResults').innerHTML = '';
@@ -1518,8 +1594,10 @@
         // Open Add Pour Modal for a specific customer ID (used by both Tab 3 and Tab 4 Details Modal)
         window.openAddPourModalForCustomer = function(custID) {
             if (!custID) return;
-            window.pourTargetCustomerId = custID;
             const cust = window.customerMap.get(custID);
+            if (!verifySecretPin(`إضافة صب للزبون (${cust ? cust.name : ''})`)) return;
+
+            window.pourTargetCustomerId = custID;
             document.getElementById('pourModalCustName').innerText = cust ? `الزبون: ${cust.name}` : '';
             document.getElementById('debtDate').value = new Date().toISOString().split('T')[0];
             document.getElementById('pourType').value = 'C30';
@@ -1557,8 +1635,17 @@
             document.getElementById('pourTotalDisplay').innerText = window.formatCurr(total);
         };
 
-        window.openPayDebtModal = function() { if (window.selectedCustomerId) window.toggleModal('payDebtModal', true); };
-        window.openCallModal = function() { if (window.selectedCustomerId) window.toggleModal('callModal', true); };
+        window.openPayDebtModal = function() {
+            if (!window.selectedCustomerId) return;
+            if (!verifySecretPin("تسديد دين")) return;
+            window.toggleModal('payDebtModal', true);
+        };
+
+        window.openCallModal = function() {
+            if (!window.selectedCustomerId) return;
+            if (!verifySecretPin("تسجيل مكالمة أو موعد")) return;
+            window.toggleModal('callModal', true);
+        };
 
         window.handleAddDebt = function(e) {
             e.preventDefault();
@@ -1768,6 +1855,7 @@
             return `<b>المقاومة:</b> ${trx.pourType || 'C30'} | <b>المكعبات:</b> ${trx.quantity || '-'} | <b>سعر المكعب:</b> ${trx.price ? window.formatCurr(trx.price) : '-'}${pumpText}<br>`;
         }
 
+        // المشاهدة مفتوحة بدون رمز سري
         window.openCustomerDetailsModal = function(custID) {
             window.activeDetailCustId = custID;
             const cust = window.customerMap.get(custID);

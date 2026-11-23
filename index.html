@@ -195,7 +195,7 @@
                 <div class="flex flex-wrap items-center gap-4 bg-slate-900 p-4 rounded-xl border border-slate-700">
                     <div class="flex-1 min-w-[220px] relative">
                         <i class="fa-solid fa-magnifying-glass absolute right-4 top-3.5 text-slate-400"></i>
-                        <input type="text" id="custSearchInput" oninput="debouncedRenderCustomersTable()" placeholder="ابحث باسم الزبون، رقم الهاتف، العنوان، أو الملاحظات..." class="w-full bg-slate-800 border border-slate-700 rounded-xl pr-11 pl-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
+                        <input type="text" id="custSearchInput" oninput="debouncedRenderCustomersTable()" placeholder="ابحث باسم الزبون، رقم الهاتف، أو الملاحظات..." class="w-full bg-slate-800 border border-slate-700 rounded-xl pr-11 pl-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
                     </div>
                     <div>
                         <select id="custFilterBalance" onchange="toggleCustDateInput(); renderCustomersTable()" class="bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
@@ -225,9 +225,7 @@
                         <thead class="bg-slate-900 text-slate-300 uppercase text-xs font-black">
                             <tr>
                                 <th class="p-3.5">اسم الزبون</th>
-                                <th class="p-3.5">تاريخ الإنشاء</th>
                                 <th class="p-3.5">رقم الهاتف</th>
-                                <th class="p-3.5">العنوان</th>
                                 <th class="p-3.5 text-rose-400">المبلغ الكلي</th>
                                 <th class="p-3.5 text-emerald-400">المبلغ المسدد</th>
                                 <th class="p-3.5 text-amber-400">المبلغ المتبقي</th>
@@ -1356,9 +1354,8 @@
                 if (search) {
                     const nameMatch = (cust.name || '').toLowerCase().includes(search);
                     const phoneMatch = (cust.phone || '').toLowerCase().includes(search);
-                    const addressMatch = (cust.address || '').toLowerCase().includes(search);
                     const notesMatch = displayNotes.toLowerCase().includes(search);
-                    if (!nameMatch && !phoneMatch && !addressMatch && !notesMatch) continue;
+                    if (!nameMatch && !phoneMatch && !notesMatch) continue;
                 }
 
                 const { remaining } = getCustomerSummary(cust.id);
@@ -1383,7 +1380,7 @@
             });
 
             if (list.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" class="text-center text-slate-400 py-8 font-bold text-base">لا توجد نتائج مطابقة لخيارات البحث أو الفلترة والتاريخ المحدد.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-slate-400 py-8 font-bold text-base">لا توجد نتائج مطابقة لخيارات البحث أو الفلترة والتاريخ المحدد.</td></tr>`;
                 return;
             }
 
@@ -1400,9 +1397,7 @@
                             ${cust.name}
                             ${updatedOnDate ? `<span class="bg-amber-500 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full shadow">محدث (${formatNumericDMY(targetDate)})</span>` : ''}
                         </td>
-                        <td class="p-3.5 text-slate-300 font-bold text-xs font-mono" dir="ltr">${formatNumericDMY(cust.createdAt)}</td>
                         <td class="p-3.5 text-amber-300 font-mono font-bold text-sm">${cust.phone}</td>
-                        <td class="p-3.5 text-slate-300 font-bold">${cust.address || '-'}</td>
                         <td class="p-3.5 font-black text-rose-400">${window.formatCurr(debtSum)}</td>
                         <td class="p-3.5 font-black text-emerald-400">${window.formatCurr(paySum)}</td>
                         <td class="p-3.5 font-black text-base ${remaining > 0 ? 'text-amber-400' : 'text-slate-300'}">${window.formatCurr(remaining)}</td>

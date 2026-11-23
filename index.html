@@ -91,20 +91,20 @@
                 </button>
             </div>
 
-            <!-- بجانب تبويب السجلات والتقارير: تاريخ آخر تحديث للصب والتسديد (إدخال يدوي) -->
+            <!-- بجانب تبويب السجلات والتقارير: تحديث الكونكريت وتحديث التسديد (حقل التاريخ القابل للتغيير في الأسفل فقط) -->
             <div class="flex flex-wrap items-center gap-2.5 py-2 px-2">
                 <div class="flex flex-col bg-slate-800/90 border border-rose-500/40 rounded-xl px-3 py-1.5 shadow">
-                    <label for="lastPourUpdateDate" class="text-[11px] font-black text-rose-400 flex items-center gap-1">
-                        <i class="fa-solid fa-truck-ramp-box"></i> تاريخ آخر تحديث للصب
+                    <label for="lastPourUpdateDate" class="text-[11px] font-black text-rose-400 flex items-center gap-1 cursor-pointer">
+                        <i class="fa-solid fa-truck-ramp-box"></i> تحديث الكونكريت
                     </label>
-                    <input type="date" id="lastPourUpdateDate" onchange="saveManualUpdateDates()" class="bg-transparent text-xs font-extrabold text-white focus:outline-none mt-0.5 cursor-pointer">
+                    <input type="date" id="lastPourUpdateDate" lang="en-GB" onchange="saveManualUpdateDates()" class="bg-transparent text-xs font-mono font-extrabold text-white focus:outline-none mt-0.5 cursor-pointer">
                 </div>
 
                 <div class="flex flex-col bg-slate-800/90 border border-emerald-500/40 rounded-xl px-3 py-1.5 shadow">
-                    <label for="lastPaymentUpdateDate" class="text-[11px] font-black text-emerald-400 flex items-center gap-1">
-                        <i class="fa-solid fa-receipt"></i> تاريخ آخر تحديث للتسديد
+                    <label for="lastPaymentUpdateDate" class="text-[11px] font-black text-emerald-400 flex items-center gap-1 cursor-pointer">
+                        <i class="fa-solid fa-receipt"></i> تحديث التسديد
                     </label>
-                    <input type="date" id="lastPaymentUpdateDate" onchange="saveManualUpdateDates()" class="bg-transparent text-xs font-extrabold text-white focus:outline-none mt-0.5 cursor-pointer">
+                    <input type="date" id="lastPaymentUpdateDate" lang="en-GB" onchange="saveManualUpdateDates()" class="bg-transparent text-xs font-mono font-extrabold text-white focus:outline-none mt-0.5 cursor-pointer">
                 </div>
             </div>
         </div>
@@ -738,7 +738,16 @@
             return true;
         }
 
-        // حفظ واسترجاع تاريخ آخر تحديث للصب والتسديد (يدوياً + مزامنة اختيارية)
+        // تحويل تاريخ YYYY-MM-DD إلى صيغة رقمية يوم / شهر / سنة (أرقام فقط)
+        function formatNumericDMY(isoDateStr) {
+            if (!isoDateStr || typeof isoDateStr !== 'string') return '--/--/----';
+            const parts = isoDateStr.split('-');
+            if (parts.length !== 3) return isoDateStr;
+            const [year, month, day] = parts;
+            return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+        }
+
+        // حفظ واسترجاع تاريخ تحديث الكونكريت وتحديث التسديد (يدوياً + مزامنة اختيارية)
         window.saveManualUpdateDates = function() {
             const pourDate = document.getElementById('lastPourUpdateDate')?.value || '';
             const payDate = document.getElementById('lastPaymentUpdateDate')?.value || '';
@@ -882,12 +891,16 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            const todayStr = new Date().toISOString().split('T')[0];
+            const now = new Date();
+            const todayStr = now.toISOString().split('T')[0];
             document.getElementById('debtDate').value = todayStr;
             document.getElementById('payDate').value = todayStr;
             document.getElementById('custTargetDateInput').value = todayStr;
             document.getElementById('logsTargetDateInput').value = todayStr;
-            document.getElementById('currentDateDisplay').innerText = new Date().toLocaleDateString('ar-IQ', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const dNum = String(now.getDate()).padStart(2, '0');
+            const mNum = String(now.getMonth() + 1).padStart(2, '0');
+            const yNum = now.getFullYear();
+            document.getElementById('currentDateDisplay').innerHTML = `<span dir="ltr" class="font-mono">${dNum}/${mNum}/${yNum}</span>`;
             
             loadManualUpdateDates();
             initFirebaseListeners();
@@ -1044,7 +1057,7 @@
                                             ${isLate ? 'متأخر عن الموعد' : 'مستحق اليوم'}
                                         </span>
                                     </div>
-                                    <p class="text-xs text-slate-300 font-bold">موعد التسديد: ${c.targetDate} | الهاتف: ${cust.phone}</p>
+                                    <p class="text-xs text-slate-300 font-bold">موعد التسديد: <span dir="ltr" class="font-mono">${formatNumericDMY(c.targetDate)}</span> | الهاتف: ${cust.phone}</p>
                                     <p class="text-sm text-slate-200 font-bold">الملاحظة: ${c.note}</p>
                                 </div>
                                 <div class="text-left">
@@ -1344,9 +1357,9 @@
                     <tr class="hover:bg-slate-700/40 ${updatedOnDate ? 'bg-amber-500/5' : ''}">
                         <td class="p-3.5 font-black text-white text-base flex items-center gap-2">
                             ${cust.name}
-                            ${updatedOnDate ? `<span class="bg-amber-500 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full shadow">محدث (${targetDate})</span>` : ''}
+                            ${updatedOnDate ? `<span class="bg-amber-500 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full shadow">محدث (${formatNumericDMY(targetDate)})</span>` : ''}
                         </td>
-                        <td class="p-3.5 text-slate-300 font-bold text-xs">${cust.createdAt}</td>
+                        <td class="p-3.5 text-slate-300 font-bold text-xs font-mono" dir="ltr">${formatNumericDMY(cust.createdAt)}</td>
                         <td class="p-3.5 text-amber-300 font-mono font-bold text-sm">${cust.phone}</td>
                         <td class="p-3.5 text-slate-300 font-bold">${cust.address || '-'}</td>
                         <td class="p-3.5 font-black text-rose-400">${window.formatCurr(debtSum)}</td>
@@ -1807,7 +1820,7 @@
                     <tr class="hover:bg-slate-700/40 ${updatedOnDate ? 'bg-amber-500/5' : ''}">
                         <td class="p-4 font-black text-white text-base flex items-center gap-2">
                             ${cust.name}
-                            ${updatedOnDate ? `<span class="bg-amber-500 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full shadow">محدث (${targetDate})</span>` : ''}
+                            ${updatedOnDate ? `<span class="bg-amber-500 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full shadow">محدث (${formatNumericDMY(targetDate)})</span>` : ''}
                         </td>
                         <td class="p-4 font-mono font-bold text-amber-300">${cust.phone}</td>
                         <td class="p-4 font-bold text-slate-300">${cust.address || '-'}</td>
@@ -1951,7 +1964,7 @@
                                     ${filteredTrans.map((t, idx) => `
                                         <tr class="hover:bg-slate-700/30">
                                             <td class="p-3 font-black text-slate-400">${idx + 1}</td>
-                                            <td class="p-3 font-mono font-bold">${t.date}</td>
+                                            <td class="p-3 font-mono font-bold" dir="ltr">${formatNumericDMY(t.date)}</td>
                                             <td class="p-3 font-black ${t.type === 'debt' ? 'text-rose-400' : 'text-emerald-400'}">
                                                 ${t.type === 'debt' ? 'عملية صب (+)' : 'عملية تسديد (-)'}
                                             </td>
@@ -1984,10 +1997,10 @@
                             ${custCalls.map(c => `
                                 <div class="text-sm text-slate-200 bg-slate-900 p-3.5 rounded-xl border border-slate-700 flex justify-between items-center font-bold">
                                     <div>
-                                        <span class="text-amber-400 font-extrabold">[تاريخ الاتصال: ${c.date}]</span>
+                                        <span class="text-amber-400 font-extrabold">[تاريخ الاتصال: <span dir="ltr" class="font-mono">${formatNumericDMY(c.date)}</span>]</span>
                                         <span class="text-slate-200"> | الملاحظة: ${c.note}</span>
                                     </div>
-                                    <span class="text-xs bg-slate-800 px-3 py-1 rounded-lg border border-slate-700 text-slate-300 font-bold">موعد التسديد المتفق عليه: ${c.targetDate || 'غير محدد'}</span>
+                                    <span class="text-xs bg-slate-800 px-3 py-1 rounded-lg border border-slate-700 text-slate-300 font-bold">موعد التسديد المتفق عليه: <span dir="ltr" class="font-mono">${c.targetDate ? formatNumericDMY(c.targetDate) : 'غير محدد'}</span></span>
                                 </div>
                             `).join('')}
                         </div>
@@ -2024,7 +2037,7 @@
                             <p>رقم الهاتف: <span>${cust.phone || '077301508888'}</span> | العنوان: <span>${cust.address || 'غير محدد'}</span></p>
                         </div>
                         <div class="text-left space-y-1">
-                            <p>التاريخ: <span>${dateStr}</span></p>
+                            <p>التاريخ: <span dir="ltr" class="font-mono">${formatNumericDMY(dateStr)}</span></p>
                             <p>نوع الحركة: <span class="bg-black text-white px-3 py-0.5 rounded font-black">${docTypeName}</span></p>
                         </div>
                     </div>
@@ -2165,7 +2178,7 @@
                             ${filteredTrans.map((t, i) => `
                                 <tr>
                                     <td class="border-2 border-black p-3 text-center font-black">${i + 1}</td>
-                                    <td class="border-2 border-black p-3 font-mono">${t.date}</td>
+                                    <td class="border-2 border-black p-3 font-mono" dir="ltr">${formatNumericDMY(t.date)}</td>
                                     <td class="border-2 border-black p-3">
                                         ${t.type === 'debt' ? formatPourDetailsHtml(t) : ''}
                                         ${t.note || '-'}
@@ -2233,7 +2246,7 @@
                     ${logoSvg}
                     <h1 class="text-4xl font-black text-black">معامل القالب للكونكريت</h1>
                     <h2 class="text-2xl font-black text-black">قسم الحسابات</h2>
-                    <p class="text-sm font-black text-black pt-2">تقرير وسجل الحسابات لكافة الزبائن - تاريخ الطباعة: ${todayStr}</p>
+                    <p class="text-sm font-black text-black pt-2">تقرير وسجل الحسابات لكافة الزبائن - تاريخ الطباعة: <span dir="ltr" class="font-mono">${formatNumericDMY(todayStr)}</span></p>
                 </div>
                 <div class="space-y-4 text-black text-sm">
                     <table class="w-full text-right border-collapse border-2 border-black">

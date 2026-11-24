@@ -465,7 +465,7 @@
                 </div>
 
                 <!-- Editable Financials -->
-                <div id="editFinancialsContainer" class="hidden grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-900 p-4 rounded-xl border border-slate-700 text-sm">
+                <div id="editFinancialsContainer" class="hidden grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-900 p-4 rounded-xl border border-slate-700 text-sm">
                     <div>
                         <label class="block text-xs text-rose-400 mb-1">المبلغ الكلي (د.ع)</label>
                         <input type="number" id="editTotalAmount" min="0" oninput="calculateEditRemaining()" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-amber-500 font-bold">
@@ -494,15 +494,21 @@
 
     <!-- Customer Detailed Log Modal -->
     <div id="customerDetailsModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4 no-print">
-        <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl max-w-5xl w-full p-6 space-y-5 shadow-2xl max-h-[92vh] flex flex-col">
+        <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl max-w-6xl w-full p-6 space-y-5 shadow-2xl max-h-[92vh] flex flex-col">
             <div class="flex flex-wrap justify-between items-center gap-3 border-b border-slate-700 pb-3">
                 <div>
                     <h3 class="text-2xl font-black text-amber-400" id="detailCustName">-</h3>
                     <p class="text-sm text-slate-300 font-bold mt-1" id="detailCustSub">-</p>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex flex-wrap items-center gap-2">
                     <button type="button" onclick="openAddPourForActiveCustomer()" class="bg-rose-600 hover:bg-rose-700 text-white font-black text-sm px-4 py-2.5 rounded-xl flex items-center gap-2 shadow-lg transition">
                         <i class="fa-solid fa-truck-ramp-box"></i> إضافة صب
+                    </button>
+                    <button type="button" onclick="openAddPayForActiveCustomer()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm px-4 py-2.5 rounded-xl flex items-center gap-2 shadow-lg transition">
+                        <i class="fa-solid fa-receipt"></i> إضافة تسديد
+                    </button>
+                    <button type="button" onclick="openAddCallForActiveCustomer()" class="bg-sky-600 hover:bg-sky-700 text-white font-black text-sm px-4 py-2.5 rounded-xl flex items-center gap-2 shadow-lg transition">
+                        <i class="fa-solid fa-phone"></i> تسجيل مكالمة
                     </button>
                     <button onclick="toggleModal('customerDetailsModal', false)" class="text-slate-400 hover:text-white px-2"><i class="fa-solid fa-xmark text-3xl"></i></button>
                 </div>
@@ -547,17 +553,18 @@
         </div>
     </div>
 
-    <!-- Add Pour Modal -->
+    <!-- Add / Edit Pour Modal -->
     <div id="addDebtModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4 no-print">
         <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-700 pb-3">
                 <div>
-                    <h3 class="text-xl font-black text-white">إضافة عملية صب جديدة</h3>
+                    <h3 class="text-xl font-black text-white" id="pourModalTitle">إضافة عملية صب جديدة</h3>
                     <p class="text-xs text-amber-400 font-bold mt-0.5" id="pourModalCustName"></p>
                 </div>
                 <button onclick="toggleModal('addDebtModal', false)" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
             </div>
             <form onsubmit="handleAddDebt(event)" class="space-y-4 text-base font-bold">
+                <input type="hidden" id="editPourTrxId">
                 <div>
                     <label class="block text-sm text-slate-300 mb-1">تاريخ الصب *</label>
                     <input type="date" id="debtDate" required class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-amber-500">
@@ -630,14 +637,18 @@
         </div>
     </div>
 
-    <!-- Pay Debt Modal -->
+    <!-- Add / Edit Pay Debt Modal -->
     <div id="payDebtModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4 no-print">
         <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-                <h3 class="text-xl font-black text-white">تسديد مبلغ وحفظ وصل</h3>
+                <div>
+                    <h3 class="text-xl font-black text-white" id="payModalTitle">تسديد مبلغ وحفظ وصل</h3>
+                    <p class="text-xs text-emerald-400 font-bold mt-0.5" id="payModalCustName"></p>
+                </div>
                 <button onclick="toggleModal('payDebtModal', false)" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
             </div>
             <form onsubmit="handlePayDebt(event)" class="space-y-4 text-base font-bold">
+                <input type="hidden" id="editPayTrxId">
                 <div>
                     <label class="block text-sm text-slate-300 mb-1">تاريخ التسديد</label>
                     <input type="date" id="payDate" required class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-white">
@@ -658,14 +669,18 @@
         </div>
     </div>
 
-    <!-- Record Call Modal -->
+    <!-- Add / Edit Record Call Modal -->
     <div id="callModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4 no-print">
         <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-                <h3 class="text-xl font-black text-white">تسجيل مكالمة / تحديد موعد تسديد</h3>
+                <div>
+                    <h3 class="text-xl font-black text-white" id="callModalTitle">تسجيل مكالمة / تحديد موعد تسديد</h3>
+                    <p class="text-xs text-sky-400 font-bold mt-0.5" id="callModalCustName"></p>
+                </div>
                 <button onclick="toggleModal('callModal', false)" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
             </div>
             <form onsubmit="handleRecordCall(event)" class="space-y-4 text-base font-bold">
+                <input type="hidden" id="editCallId">
                 <div>
                     <label class="block text-sm text-slate-300 mb-1">
                         التاريخ / موعد التسديد المتفق عليه <span class="text-xs text-amber-400 font-semibold">(غير إجباري)</span>
@@ -803,6 +818,7 @@
         window.calls = [];
         window.customerMap = new Map();
         window.transactionMap = new Map();
+        window.callMap = new Map();
         window.txByCustomer = new Map();
         window.callsByCustomer = new Map();
         window.customerSummaryMap = new Map();
@@ -811,6 +827,8 @@
         window.selectedCustomerId = null;
         window.activeDetailCustId = null;
         window.pourTargetCustomerId = null;
+        window.payTargetCustomerId = null;
+        window.callTargetCustomerId = null;
 
         let isUIUpdating = false;
         let currentActiveTab = 'overview';
@@ -826,6 +844,7 @@
         function rebuildIndexes() {
             const custMap = new Map();
             const txMap = new Map();
+            const cMap = new Map();
             const txByCust = new Map();
             const callsByCust = new Map();
             const summaryMap = new Map();
@@ -858,6 +877,7 @@
 
             for (let i = 0; i < window.calls.length; i++) {
                 const cl = window.calls[i];
+                cMap.set(cl.id, cl);
                 let cBucket = callsByCust.get(cl.customerId);
                 if (!cBucket) {
                     cBucket = [];
@@ -903,6 +923,7 @@
 
             window.customerMap = custMap;
             window.transactionMap = txMap;
+            window.callMap = cMap;
             window.txByCustomer = txByCust;
             window.callsByCustomer = callsByCust;
             window.customerSummaryMap = summaryMap;
@@ -986,6 +1007,11 @@
             }
 
             if (window.activeDetailCustId && !document.getElementById('customerDetailsModal').classList.contains('hidden')) {
+                const cust = window.customerMap.get(window.activeDetailCustId);
+                if (cust) {
+                    document.getElementById('detailCustName').innerText = cust.name;
+                    document.getElementById('detailCustSub').innerText = `رقم الهاتف: ${cust.phone} | العنوان: ${cust.address || 'غير محدد'} | ملاحظات: ${getCustomerDisplayNotes(cust)}`;
+                }
                 renderCustomerDetailsContent();
             }
         };
@@ -1576,7 +1602,7 @@
             }
         };
 
-        // ================= Tab 3: Actions =================
+        // ================= Tab 3: Actions & CRUD Operations =================
         window.filterCustomerSelect = function() {
             const query = document.getElementById('actionSearchInput').value.toLowerCase().trim();
             const filterDebtors = document.getElementById('actionFilterOnlyDebtors').value;
@@ -1626,7 +1652,6 @@
             document.getElementById('actionCustRemaining').innerText = `المتبقي: ` + window.formatCurr(remaining);
         }
 
-        // يطلب الرمز عند الدخول أو الضغط على إدارة فقط
         window.selectCustomerForAction = function(custID) {
             const cust = window.customerMap.get(custID);
             if (!cust) return;
@@ -1641,13 +1666,16 @@
             updateSelectedCustomerCard(custID);
         };
 
-        // بعد فتح الإدارة لا يطلب رمز عند إضافة صب أو تسديد أو إجراء مكالمة
+        // --- Pour (Debt) Add & Edit ---
         window.openAddPourModalForCustomer = function(custID) {
             if (!custID) return;
             const cust = window.customerMap.get(custID);
             if (!ensureManagementUnlocked(custID, `إضافة صب للزبون (${cust ? cust.name : ''})`)) return;
 
             window.pourTargetCustomerId = custID;
+            document.getElementById('editPourTrxId').value = '';
+            document.getElementById('pourModalTitle').innerText = 'إضافة عملية صب جديدة';
+            document.getElementById('addDebtSubmitBtn').innerText = 'حفظ وإضافة الصب';
             document.getElementById('pourModalCustName').innerText = cust ? `الزبون: ${cust.name}` : '';
             document.getElementById('debtDate').value = new Date().toISOString().split('T')[0];
             document.getElementById('pourType').value = 'C30';
@@ -1658,6 +1686,35 @@
             document.getElementById('pourPumpFeeDisplay').innerText = '0 د.ع';
             document.getElementById('pourTotalDisplay').innerText = '0 د.ع';
             document.getElementById('debtNote').value = '';
+            window.toggleModal('addDebtModal', true);
+        };
+
+        window.openEditPourTransaction = function(trxId) {
+            const trx = window.transactionMap.get(trxId);
+            if (!trx || trx.type !== 'debt') return;
+            const cust = window.customerMap.get(trx.customerId);
+            if (!ensureManagementUnlocked(trx.customerId, `تعديل حركة صب للزبون (${cust ? cust.name : ''})`)) return;
+
+            window.pourTargetCustomerId = trx.customerId;
+            document.getElementById('editPourTrxId').value = trx.id;
+            document.getElementById('pourModalTitle').innerText = 'تعديل عملية صب';
+            document.getElementById('addDebtSubmitBtn').innerText = 'حفظ التعديلات';
+            document.getElementById('pourModalCustName').innerText = cust ? `الزبون: ${cust.name}` : '';
+            document.getElementById('debtDate').value = trx.date || new Date().toISOString().split('T')[0];
+            document.getElementById('pourType').value = trx.pourType || 'C30';
+            document.getElementById('pourPumpFee').value = trx.pumpFee ? Number(trx.pumpFee) : '';
+
+            if (trx.quantity || trx.price) {
+                document.getElementById('pourQuantity').value = trx.quantity || '';
+                document.getElementById('pourPrice').value = trx.price || '';
+            } else {
+                const netAmount = Math.max(0, (Number(trx.amount) || 0) - (Number(trx.pumpFee) || 0));
+                document.getElementById('pourQuantity').value = 1;
+                document.getElementById('pourPrice').value = netAmount;
+            }
+
+            document.getElementById('debtNote').value = trx.note || '';
+            window.calculatePourTotal();
             window.toggleModal('addDebtModal', true);
         };
 
@@ -1685,22 +1742,6 @@
             document.getElementById('pourTotalDisplay').innerText = window.formatCurr(total);
         };
 
-        window.openPayDebtModal = function() {
-            if (!window.selectedCustomerId) return;
-            document.getElementById('payDate').value = new Date().toISOString().split('T')[0];
-            document.getElementById('payAmount').value = '';
-            document.getElementById('payNote').value = '';
-            window.toggleModal('payDebtModal', true);
-        };
-
-        window.openCallModal = function() {
-            if (!window.selectedCustomerId) return;
-            document.getElementById('callTargetDate').value = '';
-            document.getElementById('callPresetNote').value = '';
-            document.getElementById('callCustomNote').value = '';
-            window.toggleModal('callModal', true);
-        };
-
         window.handleAddDebt = function(e) {
             e.preventDefault();
             const submitBtn = document.getElementById('addDebtSubmitBtn');
@@ -1710,13 +1751,16 @@
 
             submitBtn.disabled = true;
 
+            const editTrxId = document.getElementById('editPourTrxId').value;
+            const existingTrx = editTrxId ? window.transactionMap.get(editTrxId) : null;
+
             const qty = Number(document.getElementById('pourQuantity').value) || 0;
             const price = Number(document.getElementById('pourPrice').value) || 0;
             const pumpFee = Number(document.getElementById('pourPumpFee').value) || 0;
             const totalAmount = (qty * price) + pumpFee;
 
-            const trxId = 'TRX_' + Date.now();
-            const newTrx = {
+            const trxId = existingTrx ? existingTrx.id : ('TRX_' + Date.now());
+            const trxData = {
                 id: trxId,
                 customerId: targetCustId,
                 type: 'debt',
@@ -1729,7 +1773,7 @@
                 note: document.getElementById('debtNote').value.trim()
             };
 
-            set(ref(db, 'qaleb_debts/transactions/' + trxId), newTrx).then(() => {
+            set(ref(db, 'qaleb_debts/transactions/' + trxId), trxData).then(() => {
                 submitBtn.disabled = false;
                 window.toggleModal('addDebtModal', false);
                 if (window.selectedCustomerId === targetCustId) {
@@ -1741,16 +1785,68 @@
             });
         };
 
+        // --- Pay Add & Edit ---
+        window.openPayModalForCustomer = function(custID) {
+            if (!custID) return;
+            const cust = window.customerMap.get(custID);
+            if (!ensureManagementUnlocked(custID, `تسديد مبلغ للزبون (${cust ? cust.name : ''})`)) return;
+
+            window.payTargetCustomerId = custID;
+            document.getElementById('editPayTrxId').value = '';
+            document.getElementById('payModalTitle').innerText = 'تسديد مبلغ وحفظ وصل';
+            document.getElementById('payDebtSubmitBtn').innerText = 'تسديد وطباعة وصل';
+            document.getElementById('payModalCustName').innerText = cust ? `الزبون: ${cust.name}` : '';
+            document.getElementById('payDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('payAmount').value = '';
+            document.getElementById('payNote').value = '';
+            window.toggleModal('payDebtModal', true);
+        };
+
+        window.openEditPayTransaction = function(trxId) {
+            const trx = window.transactionMap.get(trxId);
+            if (!trx || trx.type !== 'pay') return;
+            const cust = window.customerMap.get(trx.customerId);
+            if (!ensureManagementUnlocked(trx.customerId, `تعديل حركة تسديد للزبون (${cust ? cust.name : ''})`)) return;
+
+            window.payTargetCustomerId = trx.customerId;
+            document.getElementById('editPayTrxId').value = trx.id;
+            document.getElementById('payModalTitle').innerText = 'تعديل عملية تسديد';
+            document.getElementById('payDebtSubmitBtn').innerText = 'حفظ التعديلات';
+            document.getElementById('payModalCustName').innerText = cust ? `الزبون: ${cust.name}` : '';
+            document.getElementById('payDate').value = trx.date || new Date().toISOString().split('T')[0];
+            document.getElementById('payAmount').value = Number(trx.amount) || 0;
+            document.getElementById('payNote').value = trx.note || '';
+            window.toggleModal('payDebtModal', true);
+        };
+
+        window.openPayDebtModal = function() {
+            if (window.selectedCustomerId) {
+                window.openPayModalForCustomer(window.selectedCustomerId);
+            }
+        };
+
+        window.openAddPayForActiveCustomer = function() {
+            if (window.activeDetailCustId) {
+                window.openPayModalForCustomer(window.activeDetailCustId);
+            }
+        };
+
         window.handlePayDebt = function(e) {
             e.preventDefault();
             const submitBtn = document.getElementById('payDebtSubmitBtn');
             if (submitBtn.disabled) return;
+            const targetCustId = window.payTargetCustomerId || window.selectedCustomerId;
+            if (!targetCustId) return;
+
             submitBtn.disabled = true;
 
-            const trxId = 'TRX_' + Date.now();
+            const editTrxId = document.getElementById('editPayTrxId').value;
+            const isEdit = Boolean(editTrxId);
+            const trxId = isEdit ? editTrxId : ('TRX_' + Date.now());
+
             const newTrx = {
                 id: trxId,
-                customerId: window.selectedCustomerId,
+                customerId: targetCustId,
                 type: 'pay',
                 date: document.getElementById('payDate').value,
                 amount: Number(document.getElementById('payAmount').value),
@@ -1760,34 +1856,120 @@
             set(ref(db, 'qaleb_debts/transactions/' + trxId), newTrx).then(() => {
                 submitBtn.disabled = false;
                 window.toggleModal('payDebtModal', false);
-                updateSelectedCustomerCard(window.selectedCustomerId);
-                window.printSingleTransactionReceipt(newTrx.id);
+                if (window.selectedCustomerId === targetCustId) {
+                    updateSelectedCustomerCard(targetCustId);
+                }
+                if (!isEdit) {
+                    window.printSingleTransactionReceipt(newTrx.id);
+                }
             }).catch(err => {
                 submitBtn.disabled = false;
                 alert('خطأ: ' + err.message);
             });
         };
 
-        // التاريخ غير إجباري في نافذة المكالمة
+        // --- Delete Any Financial Transaction (Pour or Pay) ---
+        window.deleteTransactionItem = function(trxId) {
+            const trx = window.transactionMap.get(trxId);
+            if (!trx) return;
+            const cust = window.customerMap.get(trx.customerId);
+            if (!ensureManagementUnlocked(trx.customerId, `حذف حركة للزبون (${cust ? cust.name : ''})`)) return;
+
+            const typeLabel = trx.type === 'debt' ? 'عملية صب' : 'عملية تسديد';
+            if (confirm(`هل أنت متأكد من حذف (${typeLabel}) بمبلغ (${window.formatCurr(trx.amount)}) بتاريخ (${formatNumericDMY(trx.date)})؟ سيتم إعادة احتساب رصيد الزبون تلقائياً.`)) {
+                remove(ref(db, 'qaleb_debts/transactions/' + trxId)).then(() => {
+                    if (window.selectedCustomerId === trx.customerId) {
+                        updateSelectedCustomerCard(trx.customerId);
+                    }
+                }).catch(err => {
+                    alert('حدث خطأ أثناء الحذف: ' + err.message);
+                });
+            }
+        };
+
+        // --- Call Add, Edit & Delete ---
+        window.openCallModalForCustomer = function(custID) {
+            if (!custID) return;
+            const cust = window.customerMap.get(custID);
+            if (!ensureManagementUnlocked(custID, `تسجيل مكالمة للزبون (${cust ? cust.name : ''})`)) return;
+
+            window.callTargetCustomerId = custID;
+            document.getElementById('editCallId').value = '';
+            document.getElementById('callModalTitle').innerText = 'تسجيل مكالمة / تحديد موعد تسديد';
+            document.getElementById('callSubmitBtn').innerText = 'حفظ المكالمة';
+            document.getElementById('callModalCustName').innerText = cust ? `الزبون: ${cust.name}` : '';
+            document.getElementById('callTargetDate').value = '';
+            document.getElementById('callPresetNote').value = '';
+            document.getElementById('callCustomNote').value = '';
+            window.toggleModal('callModal', true);
+        };
+
+        window.openEditCallItem = function(callId) {
+            const callObj = window.callMap.get(callId);
+            if (!callObj) return;
+            const cust = window.customerMap.get(callObj.customerId);
+            if (!ensureManagementUnlocked(callObj.customerId, `تعديل مكالمة للزبون (${cust ? cust.name : ''})`)) return;
+
+            window.callTargetCustomerId = callObj.customerId;
+            document.getElementById('editCallId').value = callObj.id;
+            document.getElementById('callModalTitle').innerText = 'تعديل سجل المكالمة / الموعد';
+            document.getElementById('callSubmitBtn').innerText = 'حفظ التعديلات';
+            document.getElementById('callModalCustName').innerText = cust ? `الزبون: ${cust.name}` : '';
+            document.getElementById('callTargetDate').value = callObj.targetDate || '';
+            document.getElementById('callPresetNote').value = '';
+            document.getElementById('callCustomNote').value = callObj.note || '';
+            window.toggleModal('callModal', true);
+        };
+
+        window.deleteCallItem = function(callId) {
+            const callObj = window.callMap.get(callId);
+            if (!callObj) return;
+            const cust = window.customerMap.get(callObj.customerId);
+            if (!ensureManagementUnlocked(callObj.customerId, `حذف مكالمة للزبون (${cust ? cust.name : ''})`)) return;
+
+            if (confirm('هل أنت متأكد من حذف هذا السجل من المكالمات؟')) {
+                remove(ref(db, 'qaleb_debts/calls/' + callId)).catch(err => {
+                    alert('حدث خطأ أثناء حذف المكالمة: ' + err.message);
+                });
+            }
+        };
+
+        window.openCallModal = function() {
+            if (window.selectedCustomerId) {
+                window.openCallModalForCustomer(window.selectedCustomerId);
+            }
+        };
+
+        window.openAddCallForActiveCustomer = function() {
+            if (window.activeDetailCustId) {
+                window.openCallModalForCustomer(window.activeDetailCustId);
+            }
+        };
+
         window.handleRecordCall = function(e) {
             e.preventDefault();
             const submitBtn = document.getElementById('callSubmitBtn');
             if (submitBtn.disabled) return;
+            const targetCustId = window.callTargetCustomerId || window.selectedCustomerId;
+            if (!targetCustId) return;
+
             submitBtn.disabled = true;
 
-            const callId = 'CALL_' + Date.now();
+            const editCallId = document.getElementById('editCallId').value;
+            const existingCall = editCallId ? window.callMap.get(editCallId) : null;
+            const callId = existingCall ? existingCall.id : ('CALL_' + Date.now());
             const enteredDate = document.getElementById('callTargetDate').value || '';
-            const todayStr = new Date().toISOString().split('T')[0];
+            const callDate = existingCall ? (existingCall.date || new Date().toISOString().split('T')[0]) : new Date().toISOString().split('T')[0];
 
-            const newCall = {
+            const callData = {
                 id: callId,
-                customerId: window.selectedCustomerId,
-                date: todayStr,
+                customerId: targetCustId,
+                date: callDate,
                 targetDate: enteredDate,
                 note: document.getElementById('callCustomNote').value.trim()
             };
 
-            set(ref(db, 'qaleb_debts/calls/' + callId), newCall).then(() => {
+            set(ref(db, 'qaleb_debts/calls/' + callId), callData).then(() => {
                 submitBtn.disabled = false;
                 window.toggleModal('callModal', false);
             }).catch(err => {
@@ -1989,7 +2171,7 @@
             if (typeFilter !== 'calls') {
                 htmlContent += `
                     <div>
-                        <h4 class="text-sm font-black text-amber-400 mb-2 uppercase">جدول الحركات التفصيلية (صب وتسديد):</h4>
+                        <h4 class="text-sm font-black text-amber-400 mb-2 uppercase">جدول الحركات التفصيلية (صب وتسديد) — يمكن التعديل أو الحذف أو الإضافة مباشرة:</h4>
                         <div class="overflow-x-auto">
                             <table class="w-full text-right text-sm text-slate-100 border border-slate-700">
                                 <thead class="bg-slate-900 text-slate-300 font-black">
@@ -2000,12 +2182,16 @@
                                         <th class="p-3">تفاصيل الصب / البيان</th>
                                         <th class="p-3">المبلغ</th>
                                         <th class="p-3 text-amber-400">المتبقي بعد الحركة</th>
-                                        <th class="p-3 text-center">طباعة مخصصة</th>
+                                        <th class="p-3 text-center">إدارة الحركة والطباعة</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-800">
                                     ${filteredTrans.length === 0 ? '<tr><td colspan="7" class="p-5 text-slate-400 text-center font-bold">لا توجد عمليات مالية مطابقة للفلتر المحدد.</td></tr>' : ''}
-                                    ${filteredTrans.map((t, idx) => `
+                                    ${filteredTrans.map((t, idx) => {
+                                        const editHandler = t.type === 'debt'
+                                            ? `openEditPourTransaction('${t.id}')`
+                                            : `openEditPayTransaction('${t.id}')`;
+                                        return `
                                         <tr class="hover:bg-slate-700/30">
                                             <td class="p-3 font-black text-slate-400">${idx + 1}</td>
                                             <td class="p-3 font-mono font-bold" dir="ltr">${formatNumericDMY(t.date)}</td>
@@ -2019,12 +2205,21 @@
                                             <td class="p-3 font-black text-white">${window.formatCurr(t.amount)}</td>
                                             <td class="p-3 font-black text-amber-400">${window.formatCurr(balanceMap.get(t.id) || 0)}</td>
                                             <td class="p-3 text-center">
-                                                <button onclick="printSingleTransactionReceipt('${t.id}')" class="bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-600 px-3 py-1.5 rounded-lg text-xs font-black transition">
-                                                    <i class="fa-solid fa-print"></i> طباعة الوصل
-                                                </button>
+                                                <div class="flex items-center justify-center gap-1.5 flex-wrap">
+                                                    <button onclick="${editHandler}" class="bg-sky-500/20 hover:bg-sky-500/40 text-sky-300 border border-sky-500/50 px-2.5 py-1.5 rounded-lg text-xs font-black transition" title="تعديل الحركة">
+                                                        <i class="fa-solid fa-pen"></i> تعديل
+                                                    </button>
+                                                    <button onclick="deleteTransactionItem('${t.id}')" class="bg-rose-600/20 hover:bg-rose-600/40 text-rose-300 border border-rose-500/50 px-2.5 py-1.5 rounded-lg text-xs font-black transition" title="حذف الحركة">
+                                                        <i class="fa-solid fa-trash-can"></i> حذف
+                                                    </button>
+                                                    <button onclick="printSingleTransactionReceipt('${t.id}')" class="bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-600 px-2.5 py-1.5 rounded-lg text-xs font-black transition" title="طباعة الوصل">
+                                                        <i class="fa-solid fa-print"></i> وصل
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
-                                    `).join('')}
+                                    `;
+                                    }).join('')}
                                 </tbody>
                             </table>
                         </div>
@@ -2036,15 +2231,23 @@
                 htmlContent += `
                     <div class="pt-3 border-t border-slate-700">
                         <h4 class="text-sm font-black text-amber-400 mb-2 uppercase">سجل المكالمات والاتصالات:</h4>
-                        <div class="space-y-2 max-h-48 overflow-y-auto">
+                        <div class="space-y-2 max-h-56 overflow-y-auto">
                             ${custCalls.length === 0 ? '<p class="text-sm text-slate-400 py-2 font-bold">لا توجد مكالمات مسجلة.</p>' : ''}
                             ${custCalls.map(c => `
-                                <div class="text-sm text-slate-200 bg-slate-900 p-3.5 rounded-xl border border-slate-700 flex justify-between items-center font-bold">
+                                <div class="text-sm text-slate-200 bg-slate-900 p-3.5 rounded-xl border border-slate-700 flex flex-wrap justify-between items-center gap-2 font-bold">
                                     <div>
                                         <span class="text-amber-400 font-extrabold">[تاريخ الاتصال: <span dir="ltr" class="font-mono">${formatNumericDMY(c.date)}</span>]</span>
                                         <span class="text-slate-200"> | الملاحظة: ${c.note}</span>
                                     </div>
-                                    <span class="text-xs bg-slate-800 px-3 py-1 rounded-lg border border-slate-700 text-slate-300 font-bold">موعد التسديد المتفق عليه: <span dir="ltr" class="font-mono">${c.targetDate ? formatNumericDMY(c.targetDate) : 'غير محدد'}</span></span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs bg-slate-800 px-3 py-1 rounded-lg border border-slate-700 text-slate-300 font-bold">موعد التسديد المتفق عليه: <span dir="ltr" class="font-mono">${c.targetDate ? formatNumericDMY(c.targetDate) : 'غير محدد'}</span></span>
+                                        <button onclick="openEditCallItem('${c.id}')" class="bg-sky-500/20 hover:bg-sky-500/40 text-sky-300 border border-sky-500/50 px-2.5 py-1 rounded-lg text-xs font-black transition">
+                                            <i class="fa-solid fa-pen"></i> تعديل
+                                        </button>
+                                        <button onclick="deleteCallItem('${c.id}')" class="bg-rose-600/20 hover:bg-rose-600/40 text-rose-300 border border-rose-500/50 px-2.5 py-1 rounded-lg text-xs font-black transition">
+                                            <i class="fa-solid fa-trash-can"></i> حذف
+                                        </button>
+                                    </div>
                                 </div>
                             `).join('')}
                         </div>
